@@ -12,7 +12,7 @@ function Home() {
         const response = await api.get('/api/products/feed');
         setProducts(response.data);
       } catch (error) {
-        console.error('Ошибка при получении товаров', error);
+        console.error('Misatke while getting products', error);
       }
     };
 
