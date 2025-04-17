@@ -1,18 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 function Navbar() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   const handleLogout = async () => {
-    try {
-      await api.post('/api/auth/logout');
-    } catch (err) {
-      console.error('Logout error', err);
-    }
+    await logout();
     navigate('/login');
   };
 
@@ -32,7 +27,9 @@ function Navbar() {
       ) : (
         <div style={{ marginLeft: 'auto' }}>
           <Link to="/login">Login</Link>
-          <Link to="/register" style={{ marginLeft: '10px' }}>Register</Link>
+          <Link to="/register" style={{ marginLeft: '10px' }}>
+            Register
+          </Link>
         </div>
       )}
     </nav>
