@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/IvanZolo.jpg';
 import '../styles/Navbar.css';
@@ -16,13 +16,19 @@ export default function Navbar({
   const toggleMenu = () => setMobileMenuOpen(o => !o);
 
   const handleLogout = async () => {
-    await fetch(`${process.env.REACT_APP_API_URL}/api/Auth/Logout`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    setIsAuthenticated(false);
-    refreshUser();
-    navigate('/login');
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/Auth/Logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      setIsAuthenticated(false);
+
+
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   useEffect(() => {

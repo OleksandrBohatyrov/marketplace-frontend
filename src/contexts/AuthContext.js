@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error('Logout failed', err);
     }
-    setUser(null);
+    await fetchMe();
   };
 
   return (
