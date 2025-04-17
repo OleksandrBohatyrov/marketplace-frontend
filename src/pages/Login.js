@@ -1,19 +1,19 @@
-// src/pages/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
-  const [email, setEmail] = useState('');
+  const [email,    setEmail   ] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [message,  setMessage ] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
     try {
-      await api.post('/api/auth/login', { email, password });
-      setMessage('Login successful!');
+      await login(email, password);
       navigate('/');
     } catch (error) {
       console.error('Login error', error);
@@ -24,15 +24,25 @@ function Login() {
   return (
     <div>
       <h2>Login</h2>
-      {message && <p>{message}</p>}
+      {message && <p style={{ color: 'red' }}>{message}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Email: </label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
         <div>
           <label>Password: </label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
         <button type="submit">Login</button>
       </form>
