@@ -24,7 +24,7 @@ function App() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setIsAuthenticated(true);
-      setIsAdmin(data.roles?.includes('Admin'));
+      setIsAdmin(data.roles.includes('Admin')); 
     } catch {
       setIsAuthenticated(false);
       setIsAdmin(false);
