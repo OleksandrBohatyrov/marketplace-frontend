@@ -1,28 +1,41 @@
-// src/components/Navbar.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 function Navbar() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   const handleLogout = async () => {
     try {
-      // Если на backend реализован эндпоинт logout, вызываем его:
       await api.post('/api/auth/logout');
     } catch (error) {
       console.error('Logout error', error);
     }
+    // После логаута — редирект на логин
     navigate('/login');
   };
 
   return (
-    <nav style={{ padding: '10px', background: '#f2f2f2' }}>
-      <Link to="/" style={{ marginRight: '10px' }}>Home</Link>
-      <Link to="/create-product" style={{ marginRight: '10px' }}>Create Product</Link>
-      <Link to="/login" style={{ marginRight: '10px' }}>Login</Link>
-      <Link to="/register" style={{ marginRight: '10px' }}>Register</Link>
-      <button onClick={handleLogout}>Logout</button>
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/create-product">Create Product</Link>
+      {loading ? (
+        <span style={{ marginLeft: 'auto' }}>Loading…</span>
+      ) : user ? (
+        <div style={{ marginLeft: 'auto' }}>
+          <span>Hello, {user.fullName || user.userName}!</span>
+          <button onClick={handleLogout} style={{ marginLeft: '10px' }}>
+            Logout
+          </button>
+        </div>
+      ) : (
+        <div style={{ marginLeft: 'auto' }}>
+          <Link to="/login">Login</Link>
+          <Link to="/register" style={{ marginLeft: '10px' }}>Register</Link>
+        </div>
+      )}
     </nav>
   );
 }
