@@ -15,6 +15,7 @@ function Navbar() {
     <nav>
       <Link to="/">Home</Link>
       <Link to="/create-product">Create Product</Link>
+      <Link to="/cart" style={{ marginLeft: '10px' }}>Cart</Link>
       {loading ? (
         <span style={{ marginLeft: 'auto' }}>Loading…</span>
       ) : user ? (
