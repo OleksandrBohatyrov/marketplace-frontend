@@ -10,10 +10,9 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       await api.post('/api/auth/logout');
-    } catch (error) {
-      console.error('Logout error', error);
+    } catch (err) {
+      console.error('Logout error', err);
     }
-    // После логаута — редирект на логин
     navigate('/login');
   };
 
