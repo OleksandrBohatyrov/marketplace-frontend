@@ -1,51 +1,86 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/IvanZolo.jpg';
+import '../styles/Login.css';
 
-function Login() {
-  const [email,    setEmail   ] = useState('');
+function Login({ onLogin }) {
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [message,  setMessage ] = useState('');
+  const [message, setMessage]   = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setMessage('');
+    if (!email || !password) {
+      setMessage('Please enter both email and password.');
+      return;
+    }
+
     try {
-      await login(email, password);
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/Auth/Login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      // server responded 200 → auth cookie set
+      await res.json();
+
+      // lift state up to App, then redirect
+      onLogin();
       navigate('/');
-    } catch (error) {
-      console.error('Login error', error);
-      setMessage('Login failed. Check your credentials.');
+    } catch (err) {
+      console.error('Login error:', err);
+      setMessage('Login failed: ' + err.message);
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleLogin();
+  };
+
   return (
-    <div>
-      <h2>Login</h2>
-      {message && <p style={{ color: 'red' }}>{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email: </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password: </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
+    <div className="login-container">
+      <div className="login-box">
+        <img src={logo} alt="Company Logo" className="login-logo" />
+        <h2 className="login-title">Login</h2>
+
+        <form onSubmit={handleSubmit}>
+          <div className="login-form-group">
+            <label className="login-label">Email</label>
+            <input
+              type="email"
+              className="login-input"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="login-form-group">
+            <label className="login-label">Password</label>
+            <input
+              type="password"
+              className="login-input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+
+          <button type="submit" className="login-button">
+            Sign In
+          </button>
+        </form>
+
+        {message && <div className="login-message">{message}</div>}
+      </div>
     </div>
   );
 }

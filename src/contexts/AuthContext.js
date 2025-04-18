@@ -12,7 +12,6 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Вынесем в функцию, чтобы можно было вызывать при логине
   const fetchMe = async () => {
     try {
       const res = await api.get('/api/users/me');
@@ -29,9 +28,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    // 1) Вызвать API логина
     await api.post('/api/auth/login', { email, password });
-    // 2) Перезагрузить данные текущего пользователя
     await fetchMe();
   };
 
@@ -41,7 +38,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error('Logout failed', err);
     }
-    setUser(null);
+    await fetchMe();
   };
 
   return (
