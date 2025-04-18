@@ -1,0 +1,54 @@
+/* src/pages/Home.css */
+
+.home-page {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .home-controls {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Поисковая строка */
+  .home-controls input[type="text"] {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  /* Боковая панель с категориями */
+  .categories-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .categories-filter h4 {
+    margin: 0 0 0.5rem;
+  }
+  .categories-filter label {
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .categories-filter input {
+    margin-right: 0.5rem;
+  }
+  
+  /* Список товаров */
+  .product-list {
+    list-style: none;
+    padding: 0;
+  }
+  .product-list li {
+    margin: 0.5rem 0;
+  }
+  .product-list a {
+    color: #0366d6;
+    text-decoration: none;
+  }
+  .product-list a:hover {
+    text-decoration: underline;
+  }
+  
