@@ -1,7 +1,7 @@
 // src/pages/Home.js
 import React, { useEffect, useState } from 'react'
 import api from '../services/api'
-import './Home.css'
+import '../styles/Navbar.css'
 
 export default function Home() {
   const [products, setProducts]     = useState([])
