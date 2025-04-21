@@ -21,14 +21,12 @@ export default function Home() {
     setSelected(s)
   }
 
-  // сначала фильтруем
   const filtered = products.filter(p => {
     if (!p.name.toLowerCase().includes(search.toLowerCase())) return false
     if (selectedCats.size > 0 && !selectedCats.has(p.categoryId)) return false
     return true
   })
 
-  // затем сортируем копию массива
   const sorted = [...filtered]
   if (sortOrder === 'asc') {
     sorted.sort((a, b) => a.price - b.price)
@@ -41,7 +39,7 @@ export default function Home() {
       <h2>Products Feed</h2>
 
       <div className="home-controls">
-        {/* Поиск */}
+        {/* Search */}
         <input
           type="text"
           placeholder="Поиск по названию…"
@@ -49,7 +47,7 @@ export default function Home() {
           onChange={e => setSearch(e.target.value)}
         />
 
-        {/* Сортировка */}
+        {/* Sort */}
         <select
           className="sort-select"
           value={sortOrder}
@@ -60,7 +58,7 @@ export default function Home() {
           <option value="desc">Цена ↓</option>
         </select>
 
-        {/* Фильтр по категориям */}
+        {/* Filter */}
         <div className="categories-filter">
           <h4>Категории</h4>
           {categories.map(cat => (
@@ -76,7 +74,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Список */}
+      {/* List */}
       <ul className="product-list">
         {sorted.length === 0
           ? <li>Нет товаров по вашему запросу.</li>
