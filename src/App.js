@@ -14,6 +14,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import CategoryManagement from './pages/CategoryManagement';
 import ProductManagement from './pages/ProductManagement';
 
+
+import './App.css';   
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
