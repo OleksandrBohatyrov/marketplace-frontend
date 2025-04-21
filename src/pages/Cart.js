@@ -1,62 +1,61 @@
+// src/pages/Cart.js
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import { getCart, removeFromCart, clearCart } from '../utils/cart';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-function Cart() {
-  const { user, loading } = useAuth();
-  const [items, setItems] = useState([]);
+export default function Cart() {
+  const [cart, setCart] = useState([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!loading && user) {
-      api.get('/api/cart')
-        .then(res => setItems(res.data))
-        .catch(err => console.error(err));
-    }
-  }, [loading, user]);
+    setCart(getCart());
+  }, []);
 
-  const handleRemove = async (id) => {
-    try {
-      await api.delete(`/api/cart/${id}`);
-      setItems(items.filter(i => i.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert('Не удалось удалить');
+  const handleRemove = id => {
+    removeFromCart(id);
+    setCart(getCart());
+  };
+
+  const handleCheckout = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      alert('The payment was successful!');
+      clearCart();
+      setCart([]);
     }
   };
 
-  if (loading) return <p>Loading…</p>;
-  if (!user)  return <p>Сначала <a href="/login">войдите</a> или <a href="/register">зарегистрируйтесь</a>.</p>;
+  const total = cart.reduce((sum, p) => sum + p.price, 0);
 
   return (
-    <div>
-      <h2>Your Cart</h2>
-      {items.length === 0
-        ? <p>Ваша корзина пуста.</p>
-        : (
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th><th>Price</th><th>Qty</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(i => (
-                <tr key={i.id}>
-                  <td>{i.productName}</td>
-                  <td>{i.price} ₽</td>
-                  <td>{i.quantity}</td>
-                  <td>
-                    <button onClick={() => handleRemove(i.id)}>
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+    <div className="container my-4">
+      <h2>Корзина</h2>
+      {cart.length === 0 ? (
+        <p>Your basket is empty.</p>
+      ) : (
+        <>
+          <ul className="list-group mb-3">
+            {cart.map(p => (
+              <li key={p.id} className="list-group-item d-flex justify-content-between">
+                {p.name} — ${p.price}
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => handleRemove(p.id)}
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+          <h5>Total: ${total.toFixed(2)}</h5>
+          <button className="btn btn-primary" onClick={handleCheckout}>
+            Pay
+          </button>
+        </>
+      )}
     </div>
   );
 }
-
-export default Cart;

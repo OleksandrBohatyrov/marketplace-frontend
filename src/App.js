@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer'; 
 import RequireAdmin from './components/RequireAdmin';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import CreateProduct from './pages/CreateProduct';
 import Login from './pages/Login';
-import Register from './pages/Register';
+import Register from './pages/RegisterPage';
 import Cart from './pages/Cart';
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryManagement from './pages/CategoryManagement';
@@ -77,7 +79,9 @@ function App() {
             </RequireAdmin>
           }
         />
+    
       </Routes>
+      <Footer /> 
     </BrowserRouter>
   );
 }

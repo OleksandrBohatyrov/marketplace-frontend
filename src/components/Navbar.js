@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/IvanZolo.jpg';
 import '../styles/Navbar.css';
@@ -21,11 +21,9 @@ export default function Navbar({
         method: 'POST',
         credentials: 'include',
       });
-
       setIsAuthenticated(false);
-
-
-      navigate('/login');
+      refreshUser();
+      navigate('/login', { replace: true });
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -48,7 +46,7 @@ export default function Navbar({
       <div className="navbar-container">
         <Link to="/" className="navbar-logo" onClick={handleLinkClick}>
           <img src={logo} alt="Logo" className="navbar-logo-img" />
-          <span style={{ color: '#fff', marginLeft: 8 }}>Marketplace</span>
+          <span className="navbar-brand-text">Marketplace</span>
         </Link>
 
         <button className="burger-icon" onClick={toggleMenu}>
@@ -83,7 +81,13 @@ export default function Navbar({
                 <Link to="/cart" onClick={handleLinkClick}>Cart</Link>
               </li>
               <li>
-                <button onClick={() => { handleLogout(); handleLinkClick(); }}>
+                <button
+                  className="nav-button"
+                  onClick={() => {
+                    handleLogout();
+                    handleLinkClick();
+                  }}
+                >
                   Logout
                 </button>
               </li>
