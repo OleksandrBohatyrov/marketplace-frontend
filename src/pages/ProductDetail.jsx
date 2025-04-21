@@ -43,6 +43,7 @@ export default function ProductDetail() {
   }
 
   return (
+    <section className="vh-100">
     <div className="container my-5">
       <div className="row g-4">
         {/* Изображение товара */}
@@ -81,5 +82,6 @@ export default function ProductDetail() {
         </div>
       </div>
     </div>
+    </section>
   )
 }

@@ -31,6 +31,7 @@ export default function Cart() {
   const total = cart.reduce((sum, p) => sum + p.price, 0);
 
   return (
+    <section className="vh-100">
     <div className="container my-4">
       <h2>Корзина</h2>
       {cart.length === 0 ? (
@@ -57,5 +58,6 @@ export default function Cart() {
         </>
       )}
     </div>
+    </section>
   );
 }

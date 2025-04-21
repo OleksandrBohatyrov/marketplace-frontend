@@ -36,6 +36,7 @@ export default function Home() {
   if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price)
 
   return (
+    <section className="vh-100">
     <div className="container my-4">
       <h2 className="mb-4">Product feed</h2>
 
@@ -107,5 +108,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </section>
   )
 }
