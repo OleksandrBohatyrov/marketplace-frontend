@@ -33,9 +33,9 @@ export default function Cart() {
   return (
     <section className="vh-100">
     <div className="container my-4">
-      <h2>Корзина</h2>
+      <h2>Cart</h2>
       {cart.length === 0 ? (
-        <p>Your basket is empty.</p>
+        <p>Your cart is empty.</p>
       ) : (
         <>
           <ul className="list-group mb-3">

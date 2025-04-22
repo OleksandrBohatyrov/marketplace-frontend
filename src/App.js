@@ -7,12 +7,13 @@ import RequireAdmin from './components/RequireAdmin';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import CreateProduct from './pages/CreateProduct';
-import Login from './pages/Login';
+import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import Cart from './pages/Cart';
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryManagement from './pages/CategoryManagement';
 import ProductManagement from './pages/ProductManagement';
+import Profile from './pages/Profile'
 
 
 import './App.css';   
@@ -56,6 +57,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login onLogin={refreshUser} />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* Admin pages */}
         <Route
