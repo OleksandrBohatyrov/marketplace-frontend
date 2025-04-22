@@ -46,7 +46,7 @@ export default function ProductDetail() {
     <section className="vh-100">
     <div className="container my-5">
       <div className="row g-4">
-        {/* Изображение товара */}
+        {/* Product img*/}
         <div className="col-md-5">
           <div className="card">
             <img
@@ -57,10 +57,9 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Описание и кнопки */}
         <div className="col-md-7">
           <h1 className="mb-3">{product.name}</h1>
-          <h3 className="text-success mb-4">{product.price} ₽</h3>
+          <h3 className="text-success mb-4">{product.price} €</h3>
           <p className="lead">{product.description}</p>
 
           <div className="mt-4">

@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import '../styles/Login.css' // ваши переопределения, если есть
+import '../styles/Login.css'
 import logoImg from '../assets/IvanZolo.jpg'
 
 export default function LoginPage() {
@@ -21,12 +21,10 @@ export default function LoginPage() {
       return
     }
     try {
-      // здесь useAuth.login отправит { Email, Password }
       await login(email, password)
       navigate('/', { replace: true })
     } catch (err) {
       console.error(err)
-      // если API вернул problem+json с полем title
       const title = err.response?.data?.title
       setMessage(title || 'Login failed: ' + (err.message || 'Unknown error'))
     }
@@ -35,7 +33,6 @@ export default function LoginPage() {
   return (
     <div className="container py-5 vh-100">
       <div className="row justify-content-center align-items-center h-100">
-        {/* Иллюстрация слева */}
         <div className="col-md-8 col-lg-6 col-xl-5 mb-4 mb-md-0">
           <img
             src={logoImg}
@@ -44,7 +41,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Форма логина */}
+        {/* login form */}
         <div className="col-md-7 col-lg-5 col-xl-4 offset-xl-1">
           <div className="card shadow">
             <div className="card-body p-4">

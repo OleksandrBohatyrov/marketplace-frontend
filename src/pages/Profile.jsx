@@ -8,7 +8,7 @@ export default function Profile() {
   const { user, logout } = useAuth()
   const navigate          = useNavigate()
 
-  const [tab, setTab]             = useState('info')    // 'info' | 'orders' | 'cart'
+  const [tab, setTab]             = useState('info')    
   const [formData, setFormData]   = useState({ username: '', email: '' })
   const [orders, setOrders]       = useState([])
   const [cartItems, setCartItems] = useState([])

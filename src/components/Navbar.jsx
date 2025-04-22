@@ -3,43 +3,38 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa'
 import api from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 import logo from '../assets/IvanZolo.jpg'
 import '../styles/Navbar.css'
 
-export default function Navbar({
-  isAuthenticated,
-  isAdmin,
-  setIsAuthenticated,
-  refreshUser
-}) {
+export default function Navbar() {
+  const { user, logout } = useAuth()
+  const isAuthenticated = Boolean(user)
+  // Предполагаем, что в user есть поле roles: string[]
+  const isAdmin = user?.roles?.includes('Admin')
+
   const [menuOpen, setMenuOpen]   = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const navigate                  = useNavigate()
 
-  // Подгружаем количество товаров в корзине
   useEffect(() => {
-    api.get('/api/cart/count')
-      .then(res => setCartCount(res.data.count))
-      .catch(console.error)
-  }, [])
+    if (isAuthenticated) {
+      api.get('/api/cart/count')
+        .then(res => setCartCount(res.data.count))
+        .catch(console.error)
+    }
+  }, [isAuthenticated])
 
-  const toggleMenu = () => setMenuOpen(open => !open)
+  const toggleMenu = () => setMenuOpen(o => !o)
 
   const handleLogout = async () => {
-    try {
-      await api.post('/api/Auth/logout')
-      setIsAuthenticated(false)
-      refreshUser()
-      navigate('/login', { replace: true })
-    } catch (err) {
-      console.error('Logout error:', err)
-    }
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   const handleAvatarClick = () => {
     setMenuOpen(false)
-    if (isAuthenticated) navigate('/profile')
-    else navigate('/login')
+    navigate(isAuthenticated ? '/profile' : '/login')
   }
 
   return (
@@ -49,8 +44,8 @@ export default function Navbar({
         <button
           className="navbar-toggler"
           type="button"
-          aria-label="Toggle navigation"
           onClick={toggleMenu}
+          aria-label="Toggle navigation"
         >
           <FaBars size={20} />
         </button>
@@ -65,13 +60,14 @@ export default function Navbar({
         <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link
-                className="nav-link"
-                to="/"
+              <Link 
+                className="nav-link" 
+                to="/" 
                 onClick={() => setMenuOpen(false)}
-              >
-                Home
-              </Link>
+              >Home</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/sell" onClick={()=>setMenuOpen(false)}>Sell</Link>
             </li>
             {isAuthenticated && isAdmin && (
               <>
@@ -100,21 +96,21 @@ export default function Navbar({
 
         {/* Иконки справа */}
         <div className="d-flex align-items-center">
-          {/* Корзина */}
-          <Link
-            className="text-reset me-3 position-relative"
-            to="/cart"
-            onClick={() => setMenuOpen(false)}
-          >
-            <FaShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+          {isAuthenticated && (
+            <Link
+              className="text-reset me-3 position-relative"
+              to="/cart"
+              onClick={() => setMenuOpen(false)}
+            >
+              <FaShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          )}
 
-          {/* Уведомления */}
           <div className="dropdown me-3">
             <button
               className="btn btn-link text-reset dropdown-toggle p-0"
@@ -125,20 +121,30 @@ export default function Navbar({
               <FaBell size={20} />
               <span className="badge bg-danger rounded-pill">1</span>
             </button>
-            <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown">
+            <ul
+              className="dropdown-menu dropdown-menu-end"
+              aria-labelledby="notifDropdown"
+            >
               <li><a className="dropdown-item" href="#!">Some news</a></li>
               <li><a className="dropdown-item" href="#!">Another news</a></li>
             </ul>
           </div>
 
-          {/* Аватарка (профиль или логин) */}
           <button
             className="btn btn-link text-reset p-0"
-            type="button"
             onClick={handleAvatarClick}
           >
             <FaUserCircle size={28} />
           </button>
+
+          {isAuthenticated && (
+            <button
+              className="btn btn-sm btn-outline-danger ms-2"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          )}
         </div>
       </div>
     </nav>
