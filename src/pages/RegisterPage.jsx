@@ -1,145 +1,113 @@
 // src/pages/RegisterPage.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/Register.css';
-import api from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 export default function RegisterPage() {
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [message,  setMessage]  = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const navigate = useNavigate()
+  const { login } = useAuth()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
+  const [username, setUsername] = useState('')
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
 
-    if (!email || !password) {
-      setMessage('Please fill out all fields.');
-      return;
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setError('')
+
+    if (!username || !email || !password) {
+      setError('Please fill out all fields.')
+      return
     }
 
     try {
-      await api.post('/api/Auth/Register', {
-        username: email,
-        email,
-        password
-      });
+      // register
+      await api.post('/api/auth/register', {
+        Username: username,
+        Email:    email,
+        Password: password
+      }, { withCredentials: true })
 
-      await login(email, password);
+      await login(email, password)
 
-      navigate('/', { replace: true });
+      navigate('/', { replace: true })
+      window.location.reload()
+
     } catch (err) {
-      console.error('Registration error:', err);
-      if (err.response?.data) {
-        setMessage('Registration failed: ' + JSON.stringify(err.response.data));
+      console.error(err)
+      const errs = err.response?.data?.errors
+      if (errs) {
+        const fld = Object.keys(errs)[0]
+        setError(`${fld}: ${errs[fld].join(', ')}`)
       } else {
-        setMessage('Registration failed: ' + err.message);
+        setError(err.response?.data || err.message)
       }
     }
-  };
+  }
 
   return (
-    <section className="vh-100">
-      <div className="container py-5 h-100">
-        <div className="row d-flex align-items-center justify-content-center h-100">
-          <div className="col-md-8 col-lg-7 col-xl-6">
-            <img
-              src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
-              className="img-fluid"
-              alt="Illustration"
+    <div className="container vh-100 d-flex align-items-center justify-content-center">
+      <div className="card p-4 shadow" style={{ maxWidth: 400, width: '100%' }}>
+        <h3 className="mb-4 text-center">Sign up</h3>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="form-floating mb-3">
+            <input
+              id="fldUsername"
+              type="text"
+              className="form-control"
+              placeholder="Username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
             />
+            <label htmlFor="fldUsername">Username</label>
           </div>
-
-          <div className="col-md-7 col-lg-5 col-xl-5 offset-xl-1">
-            <h2 className="mb-4 text-center">Sign up</h2>
-            {message && <div className="alert alert-danger">{message}</div>}
-            <form onSubmit={handleSubmit}>
-              {/* Email */}
-              <div className="form-outline mb-4">
-                <input
-                  type="email"
-                  id="form1Example13"
-                  className="form-control form-control-lg"
-                  placeholder="Enter a valid email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                />
-                <label className="form-label" htmlFor="form1Example13">
-                  Email address
-                </label>
-              </div>
-
-              {/* Password */}
-              <div className="form-outline mb-4">
-                <input
-                  type="password"
-                  id="form1Example23"
-                  className="form-control form-control-lg"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <label className="form-label" htmlFor="form1Example23">
-                  Password
-                </label>
-              </div>
-
-              {/* Remember & Forgot */}
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="form1Example3"
-                    defaultChecked
-                  />
-                  <label className="form-check-label" htmlFor="form1Example3">
-                    Remember me
-                  </label>
-                </div>
-                <a href="#!" className="text-muted">Forgot password?</a>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                className="btn btn-primary btn-lg btn-block w-100 mb-3"
-              >
-                Sign up &amp; Sign in
-              </button>
-
-              {/* OR Divider */}
-              <div className="divider d-flex align-items-center my-4">
-                <p className="text-center fw-bold mx-3 mb-0 text-muted">OR</p>
-              </div>
-
-              {/* Social Buttons */}
-              <button
-                type="button"
-                className="btn btn-primary btn-lg btn-block mb-2"
-                style={{ backgroundColor: '#3b5998' }}
-              >
-                <i className="fab fa-facebook-f me-2"></i>
-                Continue with Facebook
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-lg btn-block"
-                style={{ backgroundColor: '#55acee' }}
-              >
-                <i className="fab fa-twitter me-2"></i>
-                Continue with Twitter
-              </button>
-            </form>
+          <div className="form-floating mb-3">
+            <input
+              id="fldEmail"
+              type="email"
+              className="form-control"
+              placeholder="Email address"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            <label htmlFor="fldEmail">Email address</label>
           </div>
+          <div className="form-floating mb-3">
+            <input
+              id="fldPassword"
+              type="password"
+              className="form-control"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <label htmlFor="fldPassword">Password</label>
+          </div>
+          <button type="submit" className="btn btn-primary w-100 mb-3">
+            SIGN UP
+          </button>
+          <div className="d-flex align-items-center my-3">
+            <hr className="flex-grow-1" />
+            <span className="mx-2 text-muted">OR</span>
+            <hr className="flex-grow-1" />
+          </div>
+          <button
+                  type="button"
+                  className="btn btn-primary w-100 mb-2"
+                  style={{ backgroundColor: '#cf3723' }}
+                >
+                <i class="fa-brands fa-google me-2"></i>
+                  Continue with Google
+                </button>
+        </form>
+        <div className="text-center mt-3">
+          Already have an account? <a href="/login">Sign in</a>
         </div>
       </div>
-    </section>
-  );
+    </div>
+  )
 }

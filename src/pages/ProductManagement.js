@@ -15,7 +15,7 @@ export default function ProductManagement() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Удалить этот товар?')) return;
+    if (!window.confirm('Remove this item?')) return;
     await api.delete(`/api/products/${id}`);
     await fetchProds();
   };

@@ -1,7 +1,7 @@
-.divider:after,
-.divider:before {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: #eee;
-}
+/* src/styles/Register.css */
+hr {
+    border: none;
+    height: 1px;
+    background: #e9ecef;
+  }
+  
