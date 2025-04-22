@@ -20,6 +20,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import CategoryManagement from './pages/CategoryManagement';
 import ProductManagement from './pages/ProductManagement';
 
+import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
+
 import './App.css';
 
 function App() {
@@ -46,61 +49,62 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <Navbar
-        isAuthenticated={isAuthenticated}
-        isAdmin={isAdmin}
-        setIsAuthenticated={setIsAuthenticated}
-        refreshUser={refreshUser}
-      />
 
-      <main className="flex-grow-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/create-product" element={<CreateProduct />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/sell" element={<SellPage />} />
-
-          <Route
-            path="/login"
-            element={<Login onLogin={refreshUser} />}
-          />
-          <Route
-            path="/register"
-            element={<Register onRegister={refreshUser} />}
-          />
-          <Route path="/profile" element={<Profile />} />
-
-          <Route
-            path="/admin"
-            element={
-              <RequireAdmin isAdmin={isAdmin}>
-                <AdminDashboard />
-              </RequireAdmin>
-            }
-          />
-          <Route
-            path="/admin/categories"
-            element={
-              <RequireAdmin isAdmin={isAdmin}>
-                <CategoryManagement />
-              </RequireAdmin>
-            }
-          />
-          <Route
-            path="/admin/products"
-            element={
-              <RequireAdmin isAdmin={isAdmin}>
-                <ProductManagement />
-              </RequireAdmin>
-            }
-          />
-        </Routes>
-      </main>
-
-      <Footer />
-    </BrowserRouter>
+    <AuthProvider>
+      <CartProvider>
+      <BrowserRouter>
+        <Navbar
+          isAuthenticated={isAuthenticated}
+          isAdmin={isAdmin}
+          setIsAuthenticated={setIsAuthenticated}
+          refreshUser={refreshUser}
+        />
+        <main className="flex-grow-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/create-product" element={<CreateProduct />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/sell" element={<SellPage />} />
+            <Route
+              path="/login"
+              element={<Login onLogin={refreshUser} />}
+            />
+            <Route
+              path="/register"
+              element={<Register onRegister={refreshUser} />}
+            />
+            <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin isAdmin={isAdmin}>
+                  <AdminDashboard />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <RequireAdmin isAdmin={isAdmin}>
+                  <CategoryManagement />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <RequireAdmin isAdmin={isAdmin}>
+                  <ProductManagement />
+                </RequireAdmin>
+              }
+            />
+          </Routes>
+        </main>
+        <Footer />
+      </BrowserRouter>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

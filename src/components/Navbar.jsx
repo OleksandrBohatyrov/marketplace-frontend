@@ -1,29 +1,25 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation} from 'react-router-dom'
 import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import logo from '../assets/IvanZolo.jpg'
 import '../styles/Navbar.css'
 
+
+import { useCart } from '../contexts/CartContext';
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const isAuthenticated = Boolean(user)
-  // Предполагаем, что в user есть поле roles: string[]
   const isAdmin = user?.roles?.includes('Admin')
 
   const [menuOpen, setMenuOpen]   = useState(false)
-  const [cartCount, setCartCount] = useState(0)
+  const { cartCount } = useCart();
   const navigate                  = useNavigate()
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      api.get('/api/cart/count')
-        .then(res => setCartCount(res.data.count))
-        .catch(console.error)
-    }
-  }, [isAuthenticated])
+
 
   const toggleMenu = () => setMenuOpen(o => !o)
 
@@ -40,7 +36,7 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        {/* Бургер */}
+        {/* Vurger menu */}
         <button
           className="navbar-toggler"
           type="button"
@@ -50,13 +46,13 @@ export default function Navbar() {
           <FaBars size={20} />
         </button>
 
-        {/* Логотип */}
+        {/* logo */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
           <span className="ms-2">Marketplace</span>
         </Link>
 
-        {/* Меню */}
+        {/* menu */}
         <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
@@ -94,7 +90,7 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* Иконки справа */}
+        {/* Right icons */}
         <div className="d-flex align-items-center">
           {isAuthenticated && (
             <Link
@@ -113,21 +109,13 @@ export default function Navbar() {
 
           <div className="dropdown me-3">
             <button
-              className="btn btn-link text-reset dropdown-toggle p-0"
+              className="btn btn-link text-reset p-0"
               type="button"
-              id="notifDropdown"
-              data-bs-toggle="dropdown"
+              id="notif"
             >
               <FaBell size={20} />
-              <span className="badge bg-danger rounded-pill">1</span>
+              <span className="badge bg-danger rounded-pill"></span>
             </button>
-            <ul
-              className="dropdown-menu dropdown-menu-end"
-              aria-labelledby="notifDropdown"
-            >
-              <li><a className="dropdown-item" href="#!">Some news</a></li>
-              <li><a className="dropdown-item" href="#!">Another news</a></li>
-            </ul>
           </div>
 
           <button
