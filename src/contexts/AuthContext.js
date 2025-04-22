@@ -1,53 +1,34 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
-const AuthContext = createContext({
-  user: null,
-  loading: true,
-  login: async () => {},
-  logout: async () => {}
-});
+const Ctx = createContext({ user: null, login: ()=>{}, logout: ()=>{} });
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMe = async () => {
-    try {
-      const res = await api.get('/api/users/me');
-      setUser(res.data);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetchMe();
+    api.get('/api/users/me')
+       .then(r => setUser(r.data))
+       .catch(()=> setUser(null));
   }, []);
 
-  const login = async (email, password) => {
-    await api.post('/api/auth/login', { email, password });
-    await fetchMe();
+  const login = async (email, pwd) => {
+    await api.post('/api/auth/login',{ email, pwd });
+    const me = await api.get('/api/users/me');
+    setUser(me.data);
   };
 
   const logout = async () => {
-    try {
-      await api.post('/api/auth/logout');
-    } catch (err) {
-      console.error('Logout failed', err);
-    }
-    await fetchMe();
+    await api.post('/api/auth/logout');
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <Ctx.Provider value={{ user, login, logout }}>
       {children}
-    </AuthContext.Provider>
+    </Ctx.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(Ctx);
