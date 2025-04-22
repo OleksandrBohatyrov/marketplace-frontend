@@ -1,38 +1,59 @@
 // src/pages/Cart.js
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
+import React, { useState, useEffect } from 'react'
+import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 
 export default function Cart() {
-  const [cart, setCart] = useState([]);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { refreshCartCount } = useCart();
+  const [cart, setCart] = useState([])
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { refreshCartCount } = useCart()
+  const [processing, setProcessing] = useState(false)
 
-  // Загрузка текущих товаров из корзины на сервере
   useEffect(() => {
     api.get('/api/cart')
       .then(res => setCart(res.data))
-      .catch(console.error);
-  }, []);
+      .catch(console.error)
+  }, [])
 
-  // Обработка «оплаты»: очищаем локальный список и обновляем контекст
   const handleCheckout = async () => {
     if (!user) {
-      navigate('/login');
-    } else {
-      alert('The payment was successful!');
-      setCart([]);            // очищаем отображение списка
-      refreshCartCount();     // сбрасываем бейджик в Navbar
-      // здесь можно добавить вызов API для создания заказа:
-      // await api.post('/api/orders', { /* данные заказа */ });
+      navigate('/login')
+      return
     }
-  };
+    if (cart.length === 0) {
+      alert('Your cart is already empty.')
+      return
+    }
+    if (!window.confirm('Are you sure you want to pay and clear your cart?')) {
+      return
+    }
 
-  // Подсчёт общей суммы
-  const total = cart.reduce((sum, p) => sum + p.price * p.quantity, 0);
+    setProcessing(true)
+    try {
+      // TODO: здесь можно создать заказ через апишку например:
+      // await api.post('/api/orders', { items: cart })
+
+      await Promise.all(
+        cart.map(item =>
+          api.delete(`/api/cart/${item.id}`)
+        )
+      )
+
+      refreshCartCount()
+
+      alert('The payment was successful! Your cart is now empty.')
+    } catch (err) {
+      console.error(err)
+      alert('Something went wrong while clearing your cart.')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const total = cart.reduce((sum, p) => sum + p.price * p.quantity, 0)
 
   return (
     <section className="vh-100">
@@ -68,12 +89,16 @@ export default function Cart() {
               <h5>${total.toFixed(2)}</h5>
             </div>
 
-            <button className="btn btn-primary w-100" onClick={handleCheckout}>
-              Pay
+            <button
+              className="btn btn-primary w-100"
+              onClick={handleCheckout}
+              disabled={processing}
+            >
+              {processing ? 'Processing...' : 'Pay'}
             </button>
           </>
         )}
       </div>
     </section>
-  );
+  )
 }
