@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation} from 'react-router-dom'
 import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
-import logo from '../assets/IvanZolo.jpg'
+import logo from '../assets/hoodielogo.png'
 import '../styles/Navbar.css'
 
 
