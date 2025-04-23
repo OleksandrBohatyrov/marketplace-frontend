@@ -1,59 +1,98 @@
 // src/pages/Cart.js
-import React, { useState, useEffect } from 'react'
-import api from '../services/api'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useCart } from '../contexts/CartContext'
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 export default function Cart() {
-  const [cart, setCart] = useState([])
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { refreshCartCount } = useCart()
-  const [processing, setProcessing] = useState(false)
+  const [cart, setCart] = useState([]);
+  const [clientSecret, setClientSecret] = useState('');
+  const [processing, setProcessing] = useState(false);
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { refreshCartCount } = useCart();
+
+  const stripe = useStripe();
+  const elements = useElements();
+
+  // 1) Загрузка корзины
   useEffect(() => {
     api.get('/api/cart')
       .then(res => setCart(res.data))
-      .catch(console.error)
-  }, [])
+      .catch(console.error);
+  }, []);
 
+  // 2) Запрос clientSecret сразу после загрузки корзины
+  useEffect(() => {
+    if (cart.length === 0) {
+      setClientSecret('');
+      return;
+    }
+
+    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    api.post('/api/payments/create-payment-intent', {
+      amount: Math.round(total * 100), // сумма в центах
+      currency: 'usd'
+    })
+    .then(res => setClientSecret(res.data.clientSecret))
+    .catch(console.error);
+  }, [cart]);
+
+  // 3) Обработчик клика "Pay"
   const handleCheckout = async () => {
     if (!user) {
-      navigate('/login')
-      return
+      navigate('/login');
+      return;
     }
+
     if (cart.length === 0) {
-      alert('Your cart is already empty.')
-      return
+      alert('Your cart is already empty.');
+      return;
     }
+
+    if (!clientSecret) {
+      alert('Payment is not ready. Please try again later.');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to pay and clear your cart?')) {
-      return
+      return;
     }
 
-    setProcessing(true)
+    setProcessing(true);
+
     try {
-      // TODO: здесь можно создать заказ через апишку например:
-      // await api.post('/api/orders', { items: cart })
+      // Подтверждаем платёж через Stripe
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: elements.getElement(CardElement) }
+      });
 
-      await Promise.all(
-        cart.map(item =>
-          api.delete(`/api/cart/${item.id}`)
-        )
-      )
+      if (error) {
+        throw error;
+      }
 
-      refreshCartCount()
-
-      alert('The payment was successful! Your cart is now empty.')
+      if (paymentIntent.status === 'succeeded') {
+        // После успешного платежа — очищаем корзину на бэке
+        await Promise.all(cart.map(item => api.delete(`/api/cart/${item.id}`)));
+        refreshCartCount();
+        alert('Оплата прошла успешно! Корзина очищена.');
+        setCart([]);
+      }
     } catch (err) {
-      console.error(err)
-      alert('Something went wrong while clearing your cart.')
+      console.error(err);
+      alert(err.message || 'Что-то пошло не так при оплате.');
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
-  const total = cart.reduce((sum, p) => sum + p.price * p.quantity, 0)
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
 
   return (
     <section className="vh-100">
@@ -86,19 +125,26 @@ export default function Cart() {
 
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5>Total:</h5>
-              <h5>${total.toFixed(2)}</h5>
+              <h5>${total}</h5>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Card details</label>
+              <div className="p-2 border rounded">
+                <CardElement options={{ hidePostalCode: true }} />
+              </div>
             </div>
 
             <button
               className="btn btn-primary w-100"
               onClick={handleCheckout}
-              disabled={processing}
+              disabled={processing || !clientSecret}
             >
-              {processing ? 'Processing...' : 'Pay'}
+              {processing ? 'Processing…' : `Pay $${total}`}
             </button>
           </>
         )}
       </div>
     </section>
-  )
+  );
 }

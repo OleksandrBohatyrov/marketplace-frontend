@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '../styles/Login.css'
-import logoImg from '../assets/IvanZolo.jpg'
+import logoImg from '../assets/hoodielogo.png'
 
 export default function LoginPage() {
   const { login } = useAuth()
