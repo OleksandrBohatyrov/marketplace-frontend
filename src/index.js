@@ -7,11 +7,17 @@ import { initMDB } from 'mdb-ui-kit';
 import 'mdb-ui-kit/css/mdb.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 initMDB();
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <AuthProvider>
-    <App />
+    <Elements stripe={stripePromise}>
+      <App />
+    </Elements>
   </AuthProvider>
 );
