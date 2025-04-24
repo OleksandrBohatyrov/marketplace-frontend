@@ -1,29 +1,43 @@
 // src/pages/Home.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 
 export default function Home() {
-  const [products, setProducts]     = useState(null);  // null = ещё не загружено
+  const [products, setProducts]     = useState(null);
   const [categories, setCategories] = useState(null);
   const [search, setSearch]         = useState('');
   const [selectedCats, setSelected] = useState(new Set());
   const [sortOrder, setSortOrder]   = useState('');
+  const [priceRange, setPriceRange] = useState([0, 0]);
+  const sliderRef                    = useRef();
 
+  // load data & init slider
   useEffect(() => {
-    // Загрузим продукты и категории одновременно
-    Promise.all([
-      api.get('/api/products/feed'),
-      api.get('/api/categories')
-    ])
-      .then(([productsRes, categoriesRes]) => {
-        setProducts(productsRes.data);
-        setCategories(categoriesRes.data);
+    api.get('/api/products/feed')
+      .then(res => {
+        const prods = res.data;
+        setProducts(prods);
+        // compute bounds
+        const prices = prods.map(p => p.price);
+        const min = Math.floor(Math.min(...prices));
+        const max = Math.ceil(Math.max(...prices));
+        setPriceRange([min, max]);
+
+        // init CoreUI range-slider
+        // eslint-disable-next-line no-undef
+        const slider = window.Coreui.RangeSlider.getOrCreateInstance(sliderRef.current, {
+          min, max, value: [min, max], label: true
+        });
+        slider.on('change', e => setPriceRange(e.detail.value));
       })
       .catch(console.error);
-  }, []);
 
-  // Пока products или categories === null — показываем спиннер
-  if (products === null || categories === null) {
+    api.get('/api/categories')
+      .then(res => setCategories(res.data))
+      .catch(console.error);
+  }, []);  // run once
+
+  if (!products || !categories) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="spinner-border" role="status">
@@ -33,24 +47,24 @@ export default function Home() {
     );
   }
 
-  // Фильтрация/сортировка после загрузки:
-  const filtered = products.filter(p => {
-    if (!p.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (selectedCats.size > 0 && !selectedCats.has(p.categoryId)) return false;
-    return true;
-  });
+  // apply all filters
+  const filtered = products
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(p => selectedCats.size === 0 || selectedCats.has(p.categoryId))
+    .filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
   const sorted = [...filtered];
-  if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price);
-  if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price);
+  if (sortOrder === 'asc')  sorted.sort((a,b)=>a.price-b.price);
+  if (sortOrder === 'desc') sorted.sort((a,b)=>b.price-a.price);
 
   return (
     <section className="vh-100">
       <div className="container my-4">
         <h2 className="mb-4">Product feed</h2>
 
+        {/* Search / Sort / Price Inputs */}
         <div className="row mb-3 g-2 align-items-center">
-          <div className="col-md-8">
+          <div className="col-md-6">
             <input
               type="text"
               className="form-control"
@@ -59,7 +73,7 @@ export default function Home() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-md-3">
             <select
               className="form-select"
               value={sortOrder}
@@ -70,9 +84,39 @@ export default function Home() {
               <option value="desc">Price ↓</option>
             </select>
           </div>
+          <div className="col-md-3 d-flex">
+            <input
+              type="number"
+              className="form-control me-1"
+              value={priceRange[0]}
+              onChange={e => {
+                const min = Number(e.target.value);
+                setPriceRange([min, Math.max(min, priceRange[1])]);
+              }}
+              placeholder="min"
+            />
+            <input
+              type="number"
+              className="form-control"
+              value={priceRange[1]}
+              onChange={e => {
+                const max = Number(e.target.value);
+                setPriceRange([Math.min(priceRange[0], max), max]);
+              }}
+              placeholder="max"
+            />
+          </div>
         </div>
 
+        {/* CoreUI double-slider */}
+        <div
+          ref={sliderRef}
+          data-coreui-toggle="range-slider"
+          className="mb-4"
+        ></div>
+
         <div className="row">
+          {/* Product list */}
           <div className="col-lg-9">
             {sorted.length === 0 ? (
               <div className="alert alert-warning">
@@ -97,6 +141,7 @@ export default function Home() {
             )}
           </div>
 
+          {/* Categories */}
           <div className="col-lg-3">
             <div className="card">
               <div className="card-header">
@@ -127,6 +172,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );
