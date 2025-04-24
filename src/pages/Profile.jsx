@@ -123,21 +123,7 @@ export default function Profile() {
       )}
 
       {tab === 'cart' && (
-        <div>
-          {cartItems.length === 0 
-            ? <div className="alert alert-info">Your cart is empty</div>
-            : (
-              <ul className="list-group">
-                {cartItems.map(item => (
-                  <li key={item.id} className="list-group-item d-flex justify-content-between">
-                    {item.product.name}
-                    <span>{item.quantity} × {item.product.price} ₽</span>
-                  </li>
-                ))}
-              </ul>
-            )
-          }
-        </div>
+      navigate('/cart', { replace: true })
       )}
     </div>
   )
