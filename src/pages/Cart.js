@@ -20,14 +20,21 @@ export default function Cart() {
   const stripe = useStripe();
   const elements = useElements();
 
-  // 1) Загрузка корзины
+  // Загрузка корзины
+  const loadCart = async () => {
+    try {
+      const res = await api.get('/api/cart');
+      setCart(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    api.get('/api/cart')
-      .then(res => setCart(res.data))
-      .catch(console.error);
+    loadCart();
   }, []);
 
-  // 2) Запрос clientSecret сразу после загрузки корзины
+  // Подготовка clientSecret для оплаты
   useEffect(() => {
     if (cart.length === 0) {
       setClientSecret('');
@@ -37,14 +44,30 @@ export default function Cart() {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     api.post('/api/payments/create-payment-intent', {
-      amount: Math.round(total * 100), // сумма в центах
+      amount: Math.round(total * 100),
       currency: 'usd'
     })
     .then(res => setClientSecret(res.data.clientSecret))
     .catch(console.error);
   }, [cart]);
 
-  // 3) Обработчик клика "Pay"
+  // Удалить один айтем из корзины
+  const handleRemove = async (cartItemId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
+      return;
+    }
+    try {
+      await api.delete(`/api/cart/${cartItemId}`);
+      // обновляем локальный стейт и счётчик
+      setCart(prev => prev.filter(i => i.id !== cartItemId));
+      refreshCartCount();
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось удалить товар. Попробуйте ещё раз.');
+    }
+  };
+
+  // Оплата
   const handleCheckout = async () => {
     if (!user) {
       navigate('/login');
@@ -52,33 +75,30 @@ export default function Cart() {
     }
 
     if (cart.length === 0) {
-      alert('Your cart is already empty.');
+      alert('Ваша корзина пуста.');
       return;
     }
 
     if (!clientSecret) {
-      alert('Payment is not ready. Please try again later.');
+      alert('Платёж ещё не готов. Попробуйте позже.');
       return;
     }
 
-    if (!window.confirm('Are you sure you want to pay and clear your cart?')) {
+    if (!window.confirm('Оплатить и очистить корзину?')) {
       return;
     }
 
     setProcessing(true);
 
     try {
-      // Подтверждаем платёж через Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: elements.getElement(CardElement) }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
-        // После успешного платежа — очищаем корзину на бэке
+        // после успешной оплаты удаляем все айтемы
         await Promise.all(cart.map(item => api.delete(`/api/cart/${item.id}`)));
         refreshCartCount();
         alert('Оплата прошла успешно! Корзина очищена.');
@@ -86,13 +106,15 @@ export default function Cart() {
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Что-то пошло не так при оплате.');
+      alert(err.message || 'Ошибка при оплате.');
     } finally {
       setProcessing(false);
     }
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+  const total = cart
+    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+    .toFixed(2);
 
   return (
     <section className="vh-100">
@@ -110,15 +132,23 @@ export default function Cart() {
                   className="list-group-item d-flex justify-content-between align-items-center"
                 >
                   <div>
-                    {item.productName}
+                    <strong>{item.productName}</strong>
                     <br />
                     <small className="text-muted">
                       Qty: {item.quantity} × ${item.price.toFixed(2)}
                     </small>
                   </div>
-                  <span className="fw-bold">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </span>
+                  <div className="d-flex align-items-center">
+                    <span className="fw-bold me-3">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleRemove(item.id)}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
