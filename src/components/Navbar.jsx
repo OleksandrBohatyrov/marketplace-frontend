@@ -1,12 +1,10 @@
-// src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation} from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import logo from '../assets/hoodielogo.png'
 import '../styles/Navbar.css'
-
 
 import { useCart } from '../contexts/CartContext';
 
@@ -18,8 +16,6 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen]   = useState(false)
   const { cartCount } = useCart();
   const navigate                  = useNavigate()
-
-
 
   const toggleMenu = () => setMenuOpen(o => !o)
 
@@ -36,7 +32,7 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        {/* Vurger menu */}
+        {/* Бургер-меню */}
         <button
           className="navbar-toggler"
           type="button"
@@ -46,13 +42,13 @@ export default function Navbar() {
           <FaBars size={20} />
         </button>
 
-        {/* logo */}
+        {/* логотип */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
           <span className="ms-2">Marketplace</span>
         </Link>
 
-        {/* menu */}
+        {/* меню */}
         <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
@@ -90,7 +86,7 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* Right icons */}
+        {/* Правый блок иконок */}
         <div className="d-flex align-items-center">
           {isAuthenticated && (
             <Link
@@ -118,12 +114,20 @@ export default function Navbar() {
             </button>
           </div>
 
-          <button
-            className="btn btn-link text-reset p-0"
-            onClick={handleAvatarClick}
-          >
-            <FaUserCircle size={28} />
-          </button>
+          {/* Аватар и ник */}
+          <div className="d-flex align-items-center">
+            <button
+              className="btn btn-link text-reset p-0"
+              onClick={handleAvatarClick}
+            >
+              <FaUserCircle size={28} />
+            </button>
+            {isAuthenticated && (
+              <span className="ms-2 me-3">
+                {user.username /* или user.fullName */}
+              </span>
+            )}
+          </div>
 
           {isAuthenticated && (
             <button
