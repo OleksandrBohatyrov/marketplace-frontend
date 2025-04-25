@@ -1,4 +1,3 @@
-// src/pages/ProductDetail.jsx
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
@@ -65,7 +64,8 @@ export default function ProductDetail() {
     <section className="vh-100">
       <div className="container my-5">
         <div className="row g-4">
-          {/* Product image */}
+
+          {/* Изображение */}
           <div className="col-md-5">
             <div className="card">
               <img
@@ -76,11 +76,31 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Product details */}
+          {/* Детали */}
           <div className="col-md-7">
             <h1 className="mb-3">{product.name}</h1>
-            <h3 className="text-success mb-4">€{product.price}</h3>
+            <h3 className="text-success mb-2">€{product.price}</h3>
             <p className="lead">{product.description}</p>
+
+            {/* Категория */}
+            <p>
+              <strong>Category:</strong> {product.category.name}
+            </p>
+
+            {/* Теги */}
+            {product.tags && product.tags.length > 0 && (
+              <p>
+                <strong>Tags:</strong>{' '}
+                {product.tags.map(tag => (
+                  <span
+                    key={tag.id}
+                    className="badge bg-secondary me-1"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </p>
+            )}
 
             <div className="mt-4">
               <button
@@ -99,6 +119,7 @@ export default function ProductDetail() {
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </section>
