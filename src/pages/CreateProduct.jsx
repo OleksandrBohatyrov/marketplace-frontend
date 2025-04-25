@@ -5,100 +5,94 @@ import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 
 export default function CreateProduct() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
+	const navigate = useNavigate()
+	const { user } = useAuth()
 
-  const [name, setName]               = useState('')
-  const [description, setDescription] = useState('')
-  const [price, setPrice]             = useState('')
-  const [categories, setCategories]   = useState([])
-  const [categoryId, setCategoryId]   = useState('')
-  const [tags, setTags]               = useState([])
-  const [selectedTags, setSelectedTags] = useState([])
-  const [error, setError]             = useState('')
+	const [name, setName] = useState('')
+	const [description, setDescription] = useState('')
+	const [price, setPrice] = useState('')
+	const [categories, setCategories] = useState([])
+	const [categoryId, setCategoryId] = useState('')
+	const [error, setError] = useState('')
 
-  useEffect(() => {
-    api.get('/api/categories').then(res => setCategories(res.data))
-    api.get('/api/tags').then(res => setTags(res.data))
-  }, [])
+	useEffect(() => {
+		api.get('/api/categories')
+			.then(res => setCategories(res.data))
+			.catch(console.error)
+	}, [])
 
-  const toggleTag = id => {
-    setSelectedTags(prev => {
-      if (prev.includes(id))
-        return prev.filter(x => x !== id)
-      if (prev.length < 5)
-        return [...prev, id]
-      return prev
-    })
-  }
+	const handleSubmit = async e => {
+		e.preventDefault()
+		setError('')
 
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setError('')
-    if (!name || !price || !categoryId)
-      return setError('Заполните название, цену и категорию')
-    if (selectedTags.length > 5)
-      return setError('Можно выбрать не более 5 тегов')
+		if (!name || !price || !categoryId) {
+			setError('Fill in the title, price and category')
+			return
+		}
 
-    try {
-      await api.post('/api/products', {
-        name,
-        description,
-        price: parseFloat(price),
-        categoryId: +categoryId,
-        tagIds: selectedTags
-      }, { withCredentials: true })
+		try {
+			await api.post(
+				'/api/products',
+				{
+					name,
+					description,
+					price: parseFloat(price),
+					categoryId: parseInt(categoryId, 10),
+				},
+				{ withCredentials: true }
+			)
 
-      navigate('/', { replace: true })
-    } catch (err) {
-      console.error(err)
-      setError(err.response?.data || 'Ошибка при создании')
-    }
-  }
+			navigate('/', { replace: true })
+		} catch (err) {
+			console.error(err)
+			setError(err.response?.data?.message || 'Error when creating a product')
+		}
+	}
 
-  if (!user) {
-    navigate('/login', { replace: true })
-    return null
-  }
+	if (!user) {
+		navigate('/login', { replace: true })
+		return null
+	}
 
-  return (
-    <div className='container my-5' style={{ maxWidth: 600 }}>
-      <h2 className='mb-4'>Add new product</h2>
-      {error && <div className='alert alert-danger'>{error}</div>}
+	return (
+		<div className='container my-5' style={{ maxWidth: 600 }}>
+			<h2 className='mb-4'>Add new product</h2>
+			{error && <div className='alert alert-danger'>{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        {/* Name, Description, Price, Category */}
-        {/* ... копировать из вашего кода ... */}
+			<form onSubmit={handleSubmit}>
+				<div className='form-floating mb-3'>
+					<input type='text' className='form-control' id='prodName' placeholder='Product name' value={name} onChange={e => setName(e.target.value)} required />
+					<label htmlFor='prodName'>Product name</label>
+				</div>
 
-        {/* --- New: Теги --- */}
-        <div className='mb-3'>
-          <label className='form-label'>Tags (up to 5):</label>
-          <div className='d-flex flex-wrap'>
-            {tags.map(tag => (
-              <button
-                type='button'
-                key={tag.id}
-                onClick={() => toggleTag(tag.id)}
-                className={
-                  'btn me-2 mb-2 ' +
-                  (selectedTags.includes(tag.id)
-                    ? 'btn-primary'
-                    : 'btn-outline-secondary')
-                }
-                disabled={
-                  !selectedTags.includes(tag.id) && selectedTags.length >= 5
-                }
-              >
-                {tag.name}
-              </button>
-            ))}
-          </div>
-        </div>
+				<div className='form-floating mb-3'>
+					<textarea className='form-control' placeholder='Description' id='prodDesc' style={{ height: '100px' }} value={description} onChange={e => setDescription(e.target.value)} />
+					<label htmlFor='prodDesc'>Description</label>
+				</div>
 
-        <button type='submit' className='btn btn-success w-100'>
-          Add item
-        </button>
-      </form>
-    </div>
-  )
+				<div className='form-floating mb-3'>
+					<input type='number' step='0.01' className='form-control' id='prodPrice' placeholder='Price' value={price} onChange={e => setPrice(e.target.value)} required />
+					<label htmlFor='prodPrice'>Price, €</label>
+				</div>
+
+				<div className='mb-4'>
+					<label htmlFor='prodCat' className='form-label'>
+						Category
+					</label>
+					<select className='form-select' id='prodCat' value={categoryId} onChange={e => setCategoryId(e.target.value)} required>
+						<option value=''>Select Category</option>
+						{categories.map(cat => (
+							<option key={cat.id} value={cat.id}>
+								{cat.name}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<button type='submit' className='btn btn-success w-100'>
+					Add item
+				</button>
+			</form>
+		</div>
+	)
 }
