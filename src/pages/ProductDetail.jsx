@@ -23,20 +23,20 @@ export default function ProductDetail() {
 
   const handleAddToCart = async () => {
     if (!user) {
-      window.alert('Please register or log in first.')
+      window.alert('Palun logi esmalt sisse või loo konto.')
       return
     }
     if (user.id === String(product.sellerId)) {
-      window.alert("You can't add your own item to the basket.")
+      window.alert("Sa ei saa omaenda toodet ostukorvi lisada.")
       return
     }
     try {
       await api.post(`/api/cart/add/${product.id}`)
-      window.alert('Product has been successfully added to your basket!')
+      window.alert('Toode lisati ostukorvi!')
       refreshCartCount()
     } catch (err) {
       console.error(err)
-      window.alert(err.response?.data?.message || 'Failed to add to basket.')
+      window.alert(err.response?.data?.message || 'Toote lisamine ostukorvi ebaõnnestus.')
     }
   }
 
@@ -44,7 +44,7 @@ export default function ProductDetail() {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading…</span>
+          <span className="visually-hidden">Laadimine…</span>
         </div>
       </div>
     )
@@ -54,7 +54,7 @@ export default function ProductDetail() {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="alert alert-warning">
-          Product not found.
+          Toodet ei leitud.
         </div>
       </div>
     )
@@ -65,7 +65,7 @@ export default function ProductDetail() {
       <div className="container my-5">
         <div className="row g-4">
 
-          {/* Изображение */}
+          {/* Pilt */}
           <div className="col-md-5">
             <div className="card">
               <img
@@ -76,21 +76,21 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Детали */}
+          {/* Detailid */}
           <div className="col-md-7">
             <h1 className="mb-3">{product.name}</h1>
             <h3 className="text-success mb-2">€{product.price}</h3>
             <p className="lead">{product.description}</p>
 
-            {/* Категория */}
+            {/* Kategooria */}
             <p>
-              <strong>Category:</strong> {product.category.name}
+              <strong>Kategooria:</strong> {product.category.name}
             </p>
 
-            {/* Теги */}
+            {/* Sildid */}
             {product.tags && product.tags.length > 0 && (
               <p>
-                <strong>Tags:</strong>{' '}
+                <strong>Sildid:</strong>{' '}
                 {product.tags.map(tag => (
                   <span
                     key={tag.id}
@@ -108,14 +108,14 @@ export default function ProductDetail() {
                 onClick={handleAddToCart}
               >
                 <i className="bi bi-cart-plus-fill me-1"></i>
-                Add to cart
+                Lisa ostukorvi
               </button>
               <button
                 className="btn btn-outline-secondary"
                 onClick={() => navigate(-1)}
               >
                 <i className="bi bi-arrow-left me-1"></i>
-                Back
+                Tagasi
               </button>
             </div>
           </div>

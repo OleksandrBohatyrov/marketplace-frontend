@@ -20,7 +20,7 @@ export default function Cart() {
   const stripe = useStripe();
   const elements = useElements();
 
-  // Загрузка корзины
+  // Ostukorvi laadimine
   const loadCart = async () => {
     try {
       const res = await api.get('/api/cart');
@@ -34,7 +34,7 @@ export default function Cart() {
     loadCart();
   }, []);
 
-  // Подготовка clientSecret для оплаты
+  // clientSecret makse jaoks
   useEffect(() => {
     if (cart.length === 0) {
       setClientSecret('');
@@ -51,23 +51,22 @@ export default function Cart() {
     .catch(console.error);
   }, [cart]);
 
-  // Удалить один айтем из корзины
+  // Eemalda üks toode ostukorvist
   const handleRemove = async (cartItemId) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
+    if (!window.confirm('Kas olete kindel, et soovite selle toote ostukorvist eemaldada?')) {
       return;
     }
     try {
       await api.delete(`/api/cart/${cartItemId}`);
-      // обновляем локальный стейт и счётчик
       setCart(prev => prev.filter(i => i.id !== cartItemId));
       refreshCartCount();
     } catch (err) {
       console.error(err);
-      alert('Не удалось удалить товар. Попробуйте ещё раз.');
+      alert('Toote eemaldamine ebaõnnestus. Palun proovige uuesti.');
     }
   };
 
-  // Оплата
+  // Makse
   const handleCheckout = async () => {
     if (!user) {
       navigate('/login');
@@ -75,16 +74,16 @@ export default function Cart() {
     }
 
     if (cart.length === 0) {
-      alert('Ваша корзина пуста.');
+      alert('Teie ostukorv on tühi.');
       return;
     }
 
     if (!clientSecret) {
-      alert('Платёж ещё не готов. Попробуйте позже.');
+      alert('Makse ei ole veel valmis. Palun proovige hiljem uuesti.');
       return;
     }
 
-    if (!window.confirm('Оплатить и очистить корзину?')) {
+    if (!window.confirm('Kas soovite maksta ja ostukorvi tühjendada?')) {
       return;
     }
 
@@ -98,15 +97,14 @@ export default function Cart() {
       if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
-        // после успешной оплаты удаляем все айтемы
         await Promise.all(cart.map(item => api.delete(`/api/cart/${item.id}`)));
         refreshCartCount();
-        alert('Оплата прошла успешно! Корзина очищена.');
+        alert('Makse õnnestus! Ostukorv on tühjendatud.');
         setCart([]);
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Ошибка при оплате.');
+      alert(err.message || 'Tekkis viga maksmisel.');
     } finally {
       setProcessing(false);
     }
@@ -119,10 +117,10 @@ export default function Cart() {
   return (
     <section className="vh-100">
       <div className="container my-4">
-        <h2>Cart</h2>
+        <h2>Ostukorv</h2>
 
         {cart.length === 0 ? (
-          <p>Your cart is empty.</p>
+          <p>Teie ostukorv on tühi.</p>
         ) : (
           <>
             <ul className="list-group mb-3">
@@ -135,7 +133,7 @@ export default function Cart() {
                     <strong>{item.productName}</strong>
                     <br />
                     <small className="text-muted">
-                      Qty: {item.quantity} × ${item.price.toFixed(2)}
+                      Kogus: {item.quantity} × ${item.price.toFixed(2)}
                     </small>
                   </div>
                   <div className="d-flex align-items-center">
@@ -146,7 +144,7 @@ export default function Cart() {
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => handleRemove(item.id)}
                     >
-                      Remove
+                      Eemalda
                     </button>
                   </div>
                 </li>
@@ -154,12 +152,12 @@ export default function Cart() {
             </ul>
 
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5>Total:</h5>
+              <h5>Kokku:</h5>
               <h5>${total}</h5>
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Card details</label>
+              <label className="form-label">Kaardi andmed</label>
               <div className="p-2 border rounded">
                 <CardElement options={{ hidePostalCode: true }} />
               </div>
@@ -170,7 +168,7 @@ export default function Cart() {
               onClick={handleCheckout}
               disabled={processing || !clientSecret}
             >
-              {processing ? 'Processing…' : `Pay $${total}`}
+              {processing ? 'Töötlemine…' : `Maksa $${total}`}
             </button>
           </>
         )}
