@@ -3,7 +3,7 @@ import api from '../services/api';
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
-  const [newName, setNewName]       = useState('');
+  const [newName, setNewName] = useState('');
 
   const fetchCats = async () => {
     const res = await api.get('/api/categories');
@@ -28,17 +28,17 @@ export default function CategoryManagement() {
 
   return (
     <div className="container my-4">
-      <h2>Categories</h2>
+      <h2>Kategooriad</h2>
       <div className="input-group mb-3">
         <input
           type="text"
           className="form-control"
-          placeholder="New category name"
+          placeholder="Uue kategooria nimi"
           value={newName}
           onChange={e => setNewName(e.target.value)}
         />
         <button className="btn btn-primary" onClick={handleAdd}>
-          Add
+          Lisa
         </button>
       </div>
       <ul className="list-group">
@@ -49,7 +49,7 @@ export default function CategoryManagement() {
               className="btn btn-sm btn-danger"
               onClick={() => handleDelete(cat.id)}
             >
-              Delete
+              Kustuta
             </button>
           </li>
         ))}
