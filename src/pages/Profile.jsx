@@ -44,10 +44,10 @@ export default function Profile() {
   const handleSave = async () => {
     try {
       await api.put('/api/users/me', formData)
-      alert('Data updated')
+      alert('Andmed on uuendatud')
     } catch (e) {
       console.error(e)
-      alert('Error on saving')
+      alert('Salvestamisel ilmnes viga')
     }
   }
 
@@ -58,7 +58,7 @@ export default function Profile() {
 
   return (
     <div className="container my-4">
-      <h2>My profile</h2>
+      <h2>Minu profiil</h2>
 
       <ul className="nav nav-tabs mb-3">
         {['info','orders','cart'].map(t => (
@@ -67,9 +67,9 @@ export default function Profile() {
               className={`nav-link ${tab===t ? 'active' : ''}`}
               onClick={() => setTab(t)}
             >
-              {t==='info'   ? 'Data'
-               :t==='orders' ? 'Order history'
-                             : 'My cart'}
+              {t==='info'   ? 'Andmed'
+               :t==='orders' ? 'Tellimuste ajalugu'
+                             : 'Minu ostukorv'}
             </button>
           </li>
         ))}
@@ -78,7 +78,7 @@ export default function Profile() {
       {tab === 'info' && (
         <div className="card p-4">
           <div className="mb-3">
-            <label className="form-label">Name</label>
+            <label className="form-label">Nimi</label>
             <input
               type="text"
               className="form-control"
@@ -87,7 +87,7 @@ export default function Profile() {
             />
           </div>
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label className="form-label">E-post</label>
             <input
               type="email"
               className="form-control"
@@ -96,10 +96,10 @@ export default function Profile() {
             />
           </div>
           <button className="btn btn-primary me-2" onClick={handleSave}>
-            Save
+            Salvesta
           </button>
           <button className="btn btn-outline-danger" onClick={handleLogout}>
-            Log out
+            Logi välja
           </button>
         </div>
       )}
@@ -107,14 +107,14 @@ export default function Profile() {
       {tab === 'orders' && (
         <div>
           {orders.length === 0 
-            ? <div className="alert alert-info">No orders</div>
+            ? <div className="alert alert-info">Tellimusi ei ole</div>
             : orders.map(o => (
                 <div key={o.id} className="card mb-3">
                   <div className="card-body">
-                    <h5>Order #{o.id}</h5>
-                    <p>Date: {new Date(o.orderDate).toLocaleString()}</p>
-                    <p>Product: {o.product.name}</p>
-                    <p>Amount: {o.product.price} €</p>
+                    <h5>Tellimus #{o.id}</h5>
+                    <p>Kuupäev: {new Date(o.orderDate).toLocaleString()}</p>
+                    <p>Toode: {o.product.name}</p>
+                    <p>Summa: {o.product.price} €</p>
                   </div>
                 </div>
               ))
@@ -123,7 +123,7 @@ export default function Profile() {
       )}
 
       {tab === 'cart' && (
-      navigate('/cart', { replace: true })
+        navigate('/cart', { replace: true })
       )}
     </div>
   )

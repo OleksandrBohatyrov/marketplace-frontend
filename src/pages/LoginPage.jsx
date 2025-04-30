@@ -17,7 +17,7 @@ export default function LoginPage() {
     e.preventDefault()
     setMessage('')
     if (!email || !password) {
-      setMessage('Please enter both email and password.')
+      setMessage('Palun sisestage nii e-post kui parool.')
       return
     }
     try {
@@ -26,7 +26,7 @@ export default function LoginPage() {
     } catch (err) {
       console.error(err)
       const title = err.response?.data?.title
-      setMessage(title || 'Login failed: ' + (err.message || 'Unknown error'))
+      setMessage(title || 'Sisselogimine ebaõnnestus: ' + (err.message || 'Tundmatu viga'))
     }
   }
 
@@ -37,50 +37,50 @@ export default function LoginPage() {
           <img
             src={logoImg}
             className="img-fluid"
-            alt="Company Logo"
+            alt="Ettevõtte logo"
           />
         </div>
 
-        {/* login form */}
+        {/* Sisselogimisvorm */}
         <div className="col-md-7 col-lg-5 col-xl-4 offset-xl-1">
           <div className="card shadow">
             <div className="card-body p-4">
-              <h3 className="mb-4 text-center">Sign in</h3>
+              <h3 className="mb-4 text-center">Logi sisse</h3>
 
               {message && (
                 <div className="alert alert-danger">{message}</div>
               )}
 
               <form onSubmit={handleSubmit}>
-                {/* Email */}
+                {/* E-post */}
                 <div className="form-floating mb-3">
                   <input
                     type="email"
                     className="form-control"
                     id="floatingEmail"
-                    placeholder="name@example.com"
+                    placeholder="nimi@näide.ee"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
                   />
-                  <label htmlFor="floatingEmail">Email address</label>
+                  <label htmlFor="floatingEmail">E-posti aadress</label>
                 </div>
 
-                {/* Password */}
+                {/* Parool */}
                 <div className="form-floating mb-3">
                   <input
                     type="password"
                     className="form-control"
                     id="floatingPassword"
-                    placeholder="Password"
+                    placeholder="Parool"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
                   />
-                  <label htmlFor="floatingPassword">Password</label>
+                  <label htmlFor="floatingPassword">Parool</label>
                 </div>
 
-                {/* Remember + Forgot */}
+                {/* Mäleta + Unustatud */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <div className="form-check">
                     <input
@@ -93,43 +93,44 @@ export default function LoginPage() {
                       className="form-check-label"
                       htmlFor="rememberMe"
                     >
-                      Remember me
+                      Pea mind meeles
                     </label>
                   </div>
                   <Link to="/forgot" className="text-decoration-none">
-                    Forgot password?
+                    Unustasid parooli?
                   </Link>
                 </div>
 
-                {/* Submit */}
+                {/* Saatmise nupp */}
                 <button
                   type="submit"
                   className="btn btn-primary w-100 mb-3"
                 >
-                  Sign in
+                  Logi sisse
                 </button>
 
-                {/* Divider */}
+                {/* Eristaja */}
                 <div className="d-flex align-items-center my-4">
                   <hr className="flex-grow-1" />
-                  <span className="mx-2 text-muted fw-bold">OR</span>
+                  <span className="mx-2 text-muted fw-bold">VÕI</span>
                   <hr className="flex-grow-1" />
                 </div>
 
-                {/* Social */}
+                {/* Sotsiaalmeedia */}
                 <button
                   type="button"
                   className="btn btn-primary w-100 mb-2"
                   style={{ backgroundColor: '#cf3723' }}
                 >
-                <i class="fa-brands fa-google me-2"></i>
-                  Continue with Google
+                  <i className="fa-brands fa-google me-2"></i>
+                  Jätka Google'iga
                 </button>
-                {/* Bottom link */}
+
+                {/* All link */}
                 <p className="text-center mt-3 mb-0 small">
-                  Don't have an account?{' '}
+                  Pole veel kontot?{' '}
                   <Link to="/register" className="link-primary">
-                    Sign up
+                    Registreeru
                   </Link>
                 </p>
               </form>
