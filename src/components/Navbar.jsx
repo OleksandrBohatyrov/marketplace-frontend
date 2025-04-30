@@ -1,12 +1,10 @@
-// src/components/Navbar.jsx
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation} from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import logo from '../assets/hoodielogo.png'
 import '../styles/Navbar.css'
-
 
 import { useCart } from '../contexts/CartContext';
 
@@ -16,10 +14,8 @@ export default function Navbar() {
   const isAdmin = user?.roles?.includes('Admin')
 
   const [menuOpen, setMenuOpen]   = useState(false)
-  const { cartCount } = useCart();
-  const navigate                  = useNavigate()
-
-
+  const { cartCount } = useCart()
+  const navigate = useNavigate()
 
   const toggleMenu = () => setMenuOpen(o => !o)
 
@@ -36,23 +32,23 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        {/* Vurger menu */}
+        {/* Burger-menüü */}
         <button
           className="navbar-toggler"
           type="button"
           onClick={toggleMenu}
-          aria-label="Toggle navigation"
+          aria-label="Lülita menüü"
         >
           <FaBars size={20} />
         </button>
 
-        {/* logo */}
+        {/* Logo */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
-          <span className="ms-2">Marketplace</span>
+          <span className="ms-2">Turg</span>
         </Link>
 
-        {/* menu */}
+        {/* Menüü */}
         <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
@@ -60,10 +56,10 @@ export default function Navbar() {
                 className="nav-link" 
                 to="/" 
                 onClick={() => setMenuOpen(false)}
-              >Home</Link>
+              >Avaleht</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/sell" onClick={()=>setMenuOpen(false)}>Sell</Link>
+              <Link className="nav-link" to="/sell" onClick={()=>setMenuOpen(false)}>Müü</Link>
             </li>
             {isAuthenticated && isAdmin && (
               <>
@@ -73,7 +69,7 @@ export default function Navbar() {
                     to="/admin/categories"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Manage Categories
+                    Halda kategooriaid
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -82,7 +78,7 @@ export default function Navbar() {
                     to="/admin/products"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Manage Products
+                    Halda tooteid
                   </Link>
                 </li>
               </>
@@ -90,7 +86,7 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* Right icons */}
+        {/* Parempoolne ikoonide plokk */}
         <div className="d-flex align-items-center">
           {isAuthenticated && (
             <Link
@@ -118,19 +114,27 @@ export default function Navbar() {
             </button>
           </div>
 
-          <button
-            className="btn btn-link text-reset p-0"
-            onClick={handleAvatarClick}
-          >
-            <FaUserCircle size={28} />
-          </button>
+          {/* Avatar ja kasutajanimi */}
+          <div className="d-flex align-items-center">
+            <button
+              className="btn btn-link text-reset p-0"
+              onClick={handleAvatarClick}
+            >
+              <FaUserCircle size={28} />
+            </button>
+            {isAuthenticated && (
+              <span className="ms-2 me-3">
+                {user.username}
+              </span>
+            )}
+          </div>
 
           {isAuthenticated && (
             <button
               className="btn btn-sm btn-outline-danger ms-2"
               onClick={handleLogout}
             >
-              Logout
+              Logi välja
             </button>
           )}
         </div>
