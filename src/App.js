@@ -14,6 +14,8 @@ import Cart from './pages/Cart';
 import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import MyOrders from './pages/MyOrders';
+import MyProducts from './pages/MyProducts';
 
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryManagement from './pages/CategoryManagement';
@@ -33,6 +35,8 @@ export default function App() {
             <Route path="/sell" element={<SellPage />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<MyOrders />} />
+            <Route path="/my-products" element={<MyProducts />} />
 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

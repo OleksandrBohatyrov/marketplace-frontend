@@ -8,6 +8,7 @@ import '../styles/Navbar.css'
 
 import { useCart } from '../contexts/CartContext';
 
+// Компонент навигационной панели
 export default function Navbar() {
   const { user, logout } = useAuth()
   const isAuthenticated = Boolean(user)
@@ -45,7 +46,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
-          <span className="ms-2">Turg</span>
+          <span className="ms-2">Brendi Riided Stock</span>
         </Link>
 
         {/* Menüü */}
@@ -61,6 +62,13 @@ export default function Navbar() {
             <li className="nav-item">
               <Link className="nav-link" to="/sell" onClick={()=>setMenuOpen(false)}>Müü</Link>
             </li>
+            {isAuthenticated && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/orders" onClick={()=>setMenuOpen(false)}>
+                  Minu tellimused
+                </Link>
+              </li>
+            )}
             {isAuthenticated && isAdmin && (
               <>
                 <li className="nav-item">
