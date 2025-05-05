@@ -35,7 +35,7 @@ export default function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/profile" element={<Profile />} />
 
-            <Route path="/orders" element={<MyProducts />} />
+            <Route path="/orders" element={<MyOrders />} />
 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
