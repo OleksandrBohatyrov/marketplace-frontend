@@ -53,9 +53,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="alert alert-warning">
-          Toodet ei leitud.
-        </div>
+        <div className="alert alert-warning">Toodet ei leitud.</div>
       </div>
     )
   }
@@ -64,8 +62,6 @@ export default function ProductDetail() {
     <section className="vh-100">
       <div className="container my-5">
         <div className="row g-4">
-
-          {/* Pilt */}
           <div className="col-md-5">
             <div className="card">
               <img
@@ -76,26 +72,18 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Detailid */}
           <div className="col-md-7">
             <h1 className="mb-3">{product.name}</h1>
             <h3 className="text-success mb-2">€{product.price}</h3>
             <p className="lead">{product.description}</p>
 
-            {/* Kategooria */}
-            <p>
-              <strong>Kategooria:</strong> {product.category.name}
-            </p>
+            <p><strong>Kategooria:</strong> {product.category.name}</p>
 
-            {/* Sildid */}
-            {product.tags && product.tags.length > 0 && (
+            {product.tags?.length > 0 && (
               <p>
                 <strong>Sildid:</strong>{' '}
                 {product.tags.map(tag => (
-                  <span
-                    key={tag.id}
-                    className="badge bg-secondary me-1"
-                  >
+                  <span key={tag.id} className="badge bg-secondary me-1">
                     {tag.name}
                   </span>
                 ))}
@@ -103,23 +91,14 @@ export default function ProductDetail() {
             )}
 
             <div className="mt-4">
-              <button
-                className="btn btn-primary me-2"
-                onClick={handleAddToCart}
-              >
-                <i className="bi bi-cart-plus-fill me-1"></i>
-                Lisa ostukorvi
+              <button className="btn btn-primary me-2" onClick={handleAddToCart}>
+                <i className="bi bi-cart-plus-fill me-1"></i> Lisa ostukorvi
               </button>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => navigate(-1)}
-              >
-                <i className="bi bi-arrow-left me-1"></i>
-                Tagasi
+              <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+                <i className="bi bi-arrow-left me-1"></i> Tagasi
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </section>

@@ -1,5 +1,5 @@
 // src/pages/SellPage.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
@@ -15,22 +15,25 @@ export default function SellPage() {
   const [selectedTags, setSelectedTags] = useState([])
   const [error, setError]           = useState('')
 
+  // реф для файлов
+  const fileInput = useRef()
+
   useEffect(() => {
-    // kontrollime autoriseerimist
+    // проверяем авторизацию
     api.get('/api/users/me', { withCredentials: true })
       .catch(() => navigate('/login', { replace: true }))
 
-    // laadime kategooriad ja sildid
+    // загружаем категории и теги
     api.get('/api/categories')
       .then(res => setCategories(res.data))
-      .catch(err => console.error(err))
+      .catch(console.error)
 
     api.get('/api/tags')
       .then(res => setTags(res.data))
-      .catch(err => console.error(err))
+      .catch(console.error)
   }, [navigate])
 
-  // sildi valiku ümberlülitamine
+  // тумблер тега
   const toggleTag = id => {
     setSelectedTags(prev => {
       if (prev.includes(id)) {
@@ -47,6 +50,8 @@ export default function SellPage() {
     e.preventDefault()
     setError('')
 
+    const files = fileInput.current.files
+    // валидация
     if (!name || !price || !categoryId) {
       setError('Palun täida nimi, hind ja kategooria.')
       return
@@ -55,18 +60,33 @@ export default function SellPage() {
       setError('Maksimaalselt 5 silti.')
       return
     }
+    if (files.length === 0) {
+      setError('Palun vali vähemalt üks pilt.')
+      return
+    }
+    if (files.length > 4) {
+      setError('Laadida võib kuni 4 pilti.')
+      return
+    }
 
     try {
+      const form = new FormData()
+      form.append('Name', name)
+      form.append('Description', description)
+      form.append('Price', parseFloat(price))
+      form.append('CategoryId', parseInt(categoryId, 10))
+      selectedTags.forEach(id => form.append('TagIds', id))
+      for (let i = 0; i < files.length; i++) {
+        form.append('Image', files[i])
+      }
+
       await api.post(
         '/api/products',
+        form,
         {
-          name,
-          description,
-          price: parseFloat(price),
-          categoryId: parseInt(categoryId, 10),
-          tagIds: selectedTags
-        },
-        { withCredentials: true }
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
       )
       navigate('/', { replace: true })
     } catch (err) {
@@ -84,7 +104,7 @@ export default function SellPage() {
       <h2 className="mb-4">Lisa uus toode müügiks</h2>
       {error && <div className="alert alert-danger">{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: 600 }}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: 600 }} encType="multipart/form-data">
         {/* Nimi */}
         <div className="mb-3">
           <label className="form-label">Nimi</label>
@@ -119,7 +139,6 @@ export default function SellPage() {
               onChange={e => setPrice(e.target.value)}
             />
           </div>
-
           <div className="col-md-6 mb-3">
             <label className="form-label">Kategooria</label>
             <select
@@ -129,9 +148,7 @@ export default function SellPage() {
             >
               <option value="">— vali —</option>
               {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
           </div>
@@ -152,14 +169,27 @@ export default function SellPage() {
                     ? 'btn-primary'
                     : 'btn-outline-secondary')
                 }
-                disabled={
-                  !selectedTags.includes(tag.id) && selectedTags.length >= 5
-                }
+                disabled={!selectedTags.includes(tag.id) && selectedTags.length >= 5}
               >
                 {tag.name}
               </button>
             ))}
           </div>
+        </div>
+
+        {/* File input */}
+        <div className="mb-4">
+          <label htmlFor="prodImages" className="form-label">
+            Toote pildid (kuni 4)
+          </label>
+          <input
+            type="file"
+            id="prodImages"
+            accept="image/*"
+            multiple
+            ref={fileInput}
+            className="form-control"
+          />
         </div>
 
         {/* Avalda */}
