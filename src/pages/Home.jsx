@@ -3,13 +3,13 @@ import api from '../services/api'
 import { Link } from 'react-router-dom'
 
 export default function Home() {
-  const [products, setProducts]   = useState(null)
-  const [categories, setCategories] = useState(null)
-  const [tags, setTags]           = useState(null)
-  const [search, setSearch]       = useState('')
+  const [products, setProducts]       = useState(null)
+  const [categories, setCategories]   = useState(null)
+  const [tags, setTags]               = useState(null)
+  const [search, setSearch]           = useState('')
   const [selectedCats, setSelectedCats] = useState(new Set())
   const [selectedTags, setSelectedTags] = useState(new Set())
-  const [sortOrder, setSortOrder] = useState('')
+  const [sortOrder, setSortOrder]     = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -35,18 +35,17 @@ export default function Home() {
     )
   }
 
-  const filtered = products.filter(p => {
-    if (!p.name.toLowerCase().includes(search.toLowerCase()))
-      return false
-    if (selectedCats.size > 0 && !selectedCats.has(p.categoryId))
-      return false
-    if (selectedTags.size > 0) {
+  const filtered = products
+    // 2) поиск по имени
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    // 3) категория
+    .filter(p => selectedCats.size === 0 || selectedCats.has(p.categoryId))
+    // 4) теги (хотя у вас в карточке теги не выводятся, но фильтр есть)
+    .filter(p => {
+      if (selectedTags.size === 0) return true
       const prodTagIds = p.tags.map(t => t.id)
-      if (![...selectedTags].some(id => prodTagIds.includes(id)))
-        return false
-    }
-    return true
-  })
+      return [...selectedTags].some(id => prodTagIds.includes(id))
+    })
 
   const sorted = [...filtered]
   if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price)

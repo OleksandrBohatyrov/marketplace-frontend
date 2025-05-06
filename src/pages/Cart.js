@@ -95,10 +95,12 @@ export default function Cart() {
       if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
-        await Promise.all(cart.map(item => api.delete(`/api/cart/${item.id}`)));
-        refreshCartCount();
-        alert('Makse õnnestus! Ostukorv on tühjendatud.');
-        setCart([]);
+           
+             await api.post('/api/cart/checkout');
+            
+               refreshCartCount();
+               setCart([]);
+               alert('Makse õnnestus! Tooted on märgitud müüdud ja ostukorv tühjendatud.');
       }
     } catch (err) {
       console.error(err);
