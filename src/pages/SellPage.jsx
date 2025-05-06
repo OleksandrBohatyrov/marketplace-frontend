@@ -15,8 +15,7 @@ export default function SellPage() {
   const [selectedTags, setSelectedTags] = useState([])
   const [error, setError]           = useState('')
 
-  // реф для файлов
-  const fileInput = useRef()
+ 
 
   useEffect(() => {
     // проверяем авторизацию
@@ -50,7 +49,7 @@ export default function SellPage() {
     e.preventDefault()
     setError('')
 
-    const files = fileInput.current.files
+ 
     // валидация
     if (!name || !price || !categoryId) {
       setError('Palun täida nimi, hind ja kategooria.')
@@ -60,14 +59,7 @@ export default function SellPage() {
       setError('Maksimaalselt 5 silti.')
       return
     }
-    if (files.length === 0) {
-      setError('Palun vali vähemalt üks pilt.')
-      return
-    }
-    if (files.length > 4) {
-      setError('Laadida võib kuni 4 pilti.')
-      return
-    }
+   
 
     try {
       const form = new FormData()
@@ -76,10 +68,7 @@ export default function SellPage() {
       form.append('Price', parseFloat(price))
       form.append('CategoryId', parseInt(categoryId, 10))
       selectedTags.forEach(id => form.append('TagIds', id))
-      for (let i = 0; i < files.length; i++) {
-        form.append('Image', files[i])
-      }
-
+     
       await api.post(
         '/api/products',
         form,
@@ -177,20 +166,7 @@ export default function SellPage() {
           </div>
         </div>
 
-        {/* File input */}
-        <div className="mb-4">
-          <label htmlFor="prodImages" className="form-label">
-            Toote pildid (kuni 4)
-          </label>
-          <input
-            type="file"
-            id="prodImages"
-            accept="image/*"
-            multiple
-            ref={fileInput}
-            className="form-control"
-          />
-        </div>
+        
 
         {/* Avalda */}
         <button type="submit" className="btn btn-primary">

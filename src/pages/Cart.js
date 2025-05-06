@@ -95,7 +95,9 @@ export default function Cart() {
       if (error) throw error;
 
       if (paymentIntent.status === 'succeeded') {
-        await Promise.all(cart.map(item => api.delete(`/api/cart/${item.id}`)));
+        await Promise.all(cart.map(item =>
+          api.put(`/api/products/${item.productId}/mark-sold`, {}, { withCredentials: true })
+        ))
         refreshCartCount();
         alert('Makse õnnestus! Ostukorv on tühjendatud.');
         setCart([]);
