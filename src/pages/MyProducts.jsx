@@ -27,12 +27,10 @@ export default function MyProducts() {
       await api.post(`/api/trades/${trade.id}/accept`)
       // удаляем принятое предложение
       setTrades(ts => ts.filter(t => t.id !== trade.id))
-      // отмечаем в списке своих товаров, что товар-цель (target) теперь продан
+      // отмечаем, что целевой товар теперь продан
       setProducts(ps =>
         ps.map(p =>
-          p.id === trade.target.id
-            ? { ...p, status: 'Sold' }
-            : p
+          p.id === trade.target.id ? { ...p, status: 'Sold' } : p
         )
       )
       alert('Vahetuspakkumine aktsepteeritud')
@@ -74,7 +72,6 @@ export default function MyProducts() {
           <div key={trade.id} className="card mb-3">
             <div className="card-body">
               <p className="mb-2">
-                {/* Теперь здесь proposer, а не requester */}
                 <strong>{trade.proposer.userName}</strong> pakub selle vastu sinu toodet{' '}
                 <Link to={`/products/${trade.offered.id}`}>
                   {trade.offered.name}

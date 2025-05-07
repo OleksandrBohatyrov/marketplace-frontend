@@ -57,3 +57,11 @@
     text-decoration: underline;
   }
   
+  .product-card {
+    transition: transform .2s, box-shadow .2s;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--bs-shadow-lg);
+  }
+  

@@ -94,14 +94,7 @@ export default function RegisterPage() {
             <span className="mx-2 text-muted">VÕI</span>
             <hr className="flex-grow-1" />
           </div>
-          <button
-            type="button"
-            className="btn btn-primary w-100 mb-2"
-            style={{ backgroundColor: '#cf3723' }}
-          >
-            <i className="fa-brands fa-google me-2"></i>
-            Jätka Google'iga
-          </button>
+
         </form>
         <div className="text-center mt-3">
           Sul on juba konto? <a href="/login">Logi sisse</a>

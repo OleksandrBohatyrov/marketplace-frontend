@@ -1,162 +1,263 @@
 // src/pages/Home.jsx
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import '../styles/Home.css'
 import api from '../services/api'
 
 export default function Home() {
-  const [products, setProducts]     = useState([])
-  const [categories, setCategories] = useState([])
-  const [search, setSearch]         = useState('')
-  const [selectedCats, setSelected] = useState(new Set())
-  const [sortOrder, setSortOrder]   = useState('')
+  const [products, setProducts]       = useState([])
+  const [categories, setCategories]   = useState([])
+  const [tags, setTags]               = useState([])
+  const [search, setSearch]           = useState('')
+  const [selectedCats, setSelectedCats] = useState(new Set())
+  const [selectedTags, setSelectedTags] = useState(new Set())
+  const [sortOrder, setSortOrder]     = useState('')
+  const [priceRange, setPriceRange]   = useState([0, 0])
+  const [selPrice, setSelPrice]       = useState([0, 0])
 
   useEffect(() => {
-    api.get('/api/products/feed')
-       .then(r => setProducts(r.data))
-       .catch(console.error)
+    Promise.all([
+      api.get('/api/products/feed'),
+      api.get('/api/categories'),
+      api.get('/api/tags'),
+    ])
+      .then(([prdRes, catRes, tagRes]) => {
+        // добавляем categoryId для фильтрации
+        const normalized = prdRes.data.map(p => ({
+          ...p,
+          categoryId: p.category.id
+        }))
+        setProducts(normalized)
+        setCategories(catRes.data)
+        setTags(tagRes.data)
 
-    api.get('/api/categories')
-       .then(r => setCategories(r.data))
-       .catch(console.error)
+        // вычисляем границы для фильтра по цене (учитываем аукционы)
+        const allPrices = normalized.map(p =>
+          p.isAuction
+            ? (p.currentBid ?? p.minBid ?? 0)
+            : p.price
+        )
+        const min = Math.min(...allPrices)
+        const max = Math.max(...allPrices)
+        setPriceRange([min, max])
+        setSelPrice([min, max])
+      })
+      .catch(console.error)
   }, [])
 
-  const toggleCat = id => {
-    const s = new Set(selectedCats)
-    s.has(id) ? s.delete(id) : s.add(id)
-    setSelected(s)
-  }
+  const now = new Date()
 
-  // Фильтр по названию и выбранным категориям
-  const filtered = products.filter(p => {
-    if (!p.name.toLowerCase().includes(search.toLowerCase())) return false
-    if (selectedCats.size > 0 && !selectedCats.has(p.category.id)) return false
-    return true
-  })
+  // функция для получения актуальной цены (для обычных и аукционных товаров)
+  const getPrice = p =>
+    p.isAuction
+      ? (p.currentBid ?? p.minBid ?? 0)
+      : p.price
 
-  // Сортируем копию, а не мутируем исходник
+  // последовательно применяем все фильтры
+  const filtered = products
+    // убираем завершённые аукционы
+    .filter(p => !(p.isAuction && p.endsAt && new Date(p.endsAt) <= now))
+    // поиск по имени
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    // фильтр по категориям
+    .filter(p => !selectedCats.size || selectedCats.has(p.categoryId))
+    // фильтр по тегам
+    .filter(p => !selectedTags.size || p.tags.some(t => selectedTags.has(t.id)))
+    // фильтр по цене
+    .filter(p => {
+      const price = getPrice(p)
+      return price >= selPrice[0] && price <= selPrice[1]
+    })
+
+  // копируем массив и сортируем, если нужно
   const sorted = [...filtered]
   if (sortOrder === 'asc') {
-    sorted.sort((a, b) => {
-      const aVal = a.isAuction ? (a.currentBid ?? a.minBid ?? 0) : a.price
-      const bVal = b.isAuction ? (b.currentBid ?? b.minBid ?? 0) : b.price
-      return aVal - bVal
-    })
+    sorted.sort((a, b) => getPrice(a) - getPrice(b))
   }
   if (sortOrder === 'desc') {
-    sorted.sort((a, b) => {
-      const aVal = a.isAuction ? (a.currentBid ?? a.minBid ?? 0) : a.price
-      const bVal = b.isAuction ? (b.currentBid ?? b.minBid ?? 0) : b.price
-      return bVal - aVal
+    sorted.sort((a, b) => getPrice(b) - getPrice(a))
+  }
+
+  // переключение категории
+  const toggleCat = id => {
+    setSelectedCats(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
     })
+  }
+  // переключение тега
+  const toggleTag = id => {
+    setSelectedTags(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
+  }
+  // изменение минимальной цены
+  const onMinChange = e => {
+    const v = +e.target.value
+    setSelPrice([Math.min(v, selPrice[1]), selPrice[1]])
+  }
+  // изменение максимальной цены
+  const onMaxChange = e => {
+    const v = +e.target.value
+    setSelPrice([selPrice[0], Math.max(v, selPrice[0])])
   }
 
   return (
-    <section className="vh-100">
-      <div className="container my-4">
-        <h2 className="mb-4">Toodete voog</h2>
-
-        {/* Поиск + сортировка */}
-        <div className="row mb-3 g-2 align-items-center">
-          <div className="col-md-8">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Otsi toote nime järgi…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="col-md-4">
-            <select
-              className="form-select"
-              value={sortOrder}
-              onChange={e => setSortOrder(e.target.value)}
-            >
-              <option value="">Ilma sorteeringuta</option>
-              <option value="asc">Hind ↑</option>
-              <option value="desc">Hind ↓</option>
-            </select>
-          </div>
+    <div className="container my-4">
+      {/* Search & Sort */}
+      <div className="row mb-3 gx-2 align-items-center">
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Otsi toote nime järgi…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-
-        <div className="row">
-          {/* Список товаров */}
-          <div className="col-lg-9">
-            {sorted.length === 0 ? (
-              <div className="alert alert-warning">
-                Ei leidnud ühtegi toodet.
-              </div>
-            ) : (
-              <div className="row">
-                {sorted.map(p => (
-                  <div key={p.id} className="col-md-6 mb-4">
-                    <div className="card h-100">
-                      <Link to={`/products/${p.id}`}>
-                        <img
-                          src={p.imageUrl || 'https://via.placeholder.com/400x300'}
-                          className="card-img-top"
-                          alt={p.name}
-                          style={{ height: '200px', objectFit: 'cover' }}
-                        />
-                      </Link>
-                      <div className="card-body d-flex flex-column">
-                        <h5 className="card-title">{p.name}</h5>
-                        <div className="mt-auto">
-                          {p.isAuction ? (
-                            <>
-                              <span className="badge bg-warning rounded-pill me-2">
-                                Auktsioon: €
-                                {(p.currentBid ?? p.minBid ?? 0).toFixed(2)}
-                              </span>
-                              <span className="badge bg-info text-dark">
-                                Auktsioon
-                              </span>
-                            </>
-                          ) : (
-                            <span className="badge bg-primary rounded-pill">
-                              €{p.price.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Фильтр по категориям */}
-          <div className="col-lg-3">
-            <div className="card">
-              <div className="card-header">
-                <h5 className="card-title mb-0">Kategooriad</h5>
-              </div>
-              <ul className="list-group list-group-flush">
-                {categories.map(cat => (
-                  <li key={cat.id} className="list-group-item">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`cat-${cat.id}`}
-                        checked={selectedCats.has(cat.id)}
-                        onChange={() => toggleCat(cat.id)}
-                      />
-                      <label
-                        className="form-check-label"
-                        htmlFor={`cat-${cat.id}`}
-                      >
-                        {cat.name}
-                      </label>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        <div className="col-md-3">
+          <select
+            className="form-select"
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="">Ilma sorteerimiseta</option>
+            <option value="asc">Hind ↑</option>
+            <option value="desc">Hind ↓</option>
+          </select>
         </div>
       </div>
-    </section>
+
+      <div className="row">
+        {/* Sidebar filters */}
+        <aside className="col-lg-3 mb-4">
+          {/* Price filter */}
+          <div className="card mb-3">
+            <div className="card-header">
+              <h5 className="mb-0">Hind</h5>
+            </div>
+            <div className="card-body">
+              <div className="d-flex justify-content-between mb-2">
+                <small>€{selPrice[0].toFixed(2)}</small>
+                <small>€{selPrice[1].toFixed(2)}</small>
+              </div>
+              <input
+                type="range"
+                className="form-range"
+                min={priceRange[0]}
+                max={priceRange[1]}
+                value={selPrice[0]}
+                onChange={onMinChange}
+              />
+              <input
+                type="range"
+                className="form-range mt-2"
+                min={priceRange[0]}
+                max={priceRange[1]}
+                value={selPrice[1]}
+                onChange={onMaxChange}
+              />
+            </div>
+          </div>
+          {/* Category filter */}
+          <div className="card mb-3">
+            <div className="card-header">
+              <h5 className="mb-0">Kategooriad</h5>
+            </div>
+            <ul className="list-group list-group-flush">
+              {categories.map(cat => (
+                <li key={cat.id} className="list-group-item py-1">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`cat-${cat.id}`}
+                      checked={selectedCats.has(cat.id)}
+                      onChange={() => toggleCat(cat.id)}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`cat-${cat.id}`}
+                    >
+                      {cat.name}
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Tag filter */}
+          <div className="card">
+            <div className="card-header">
+              <h5 className="mb-0">Sildid</h5>
+            </div>
+            <ul className="list-group list-group-flush">
+              {tags.map(tag => (
+                <li key={tag.id} className="list-group-item py-1">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`tag-${tag.id}`}
+                      checked={selectedTags.has(tag.id)}
+                      onChange={() => toggleTag(tag.id)}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`tag-${tag.id}`}
+                    >
+                      {tag.name}
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+
+        {/* Product grid */}
+        <div className="col-lg-9">
+          {sorted.length === 0 ? (
+            <div className="alert alert-warning">
+              Päringule ei vastanud ükski toode.
+            </div>
+          ) : (
+            <div className="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+              {sorted.map(p => (
+                <div key={p.id} className="col">
+                  <Link
+                    to={`/products/${p.id}`}
+                    className="card h-100 product-card text-decoration-none text-dark"
+                  >
+                    <img
+                      src={p.imageUrl || 'https://via.placeholder.com/400x300'}
+                      alt={p.name}
+                      className="card-img-top"
+                      style={{ objectFit: 'cover', height: '140px' }}
+                    />
+                    <div className="card-body p-2 d-flex justify-content-between align-items-center">
+                      <h6
+                        className="card-title mb-0 text-truncate"
+                        style={{ maxWidth: '120px' }}
+                      >
+                        {p.name}
+                      </h6>
+                      <span className="fw-bold text-success">
+                        €{getPrice(p).toFixed(2)}
+                      </span>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
