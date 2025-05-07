@@ -1,5 +1,4 @@
 // src/pages/MyProducts.jsx
-
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
@@ -25,13 +24,13 @@ export default function MyProducts() {
 
   const handleAccept = async trade => {
     try {
-      await api.put(`/api/trades/${trade.id}/accept`)
+      await api.post(`/api/trades/${trade.id}/accept`)
+      // удаляем принятое предложение
       setTrades(ts => ts.filter(t => t.id !== trade.id))
+      // отмечаем, что целевой товар теперь продан
       setProducts(ps =>
         ps.map(p =>
-          p.id === trade.requestedProductId
-            ? { ...p, status: 'Sold' }
-            : p
+          p.id === trade.target.id ? { ...p, status: 'Sold' } : p
         )
       )
       alert('Vahetuspakkumine aktsepteeritud')
@@ -42,7 +41,7 @@ export default function MyProducts() {
 
   const handleReject = async trade => {
     try {
-      await api.put(`/api/trades/${trade.id}/reject`)
+      await api.post(`/api/trades/${trade.id}/reject`)
       setTrades(ts => ts.filter(t => t.id !== trade.id))
       alert('Vahetuspakkumine keelatud')
     } catch {
@@ -62,31 +61,52 @@ export default function MyProducts() {
 
   return (
     <div className="container my-5">
-      {/* ...trades section... */}
-  
+      {/* SECTION: Exchange Proposals */}
+      <h2 className="mb-4">Vahetuspakkumised</h2>
+      {trades.length === 0 ? (
+        <div className="alert alert-info">
+          Sul pole praegu ühtegi vahetuspakkumist.
+        </div>
+      ) : (
+        trades.map(trade => (
+          <div key={trade.id} className="card mb-3">
+            <div className="card-body">
+              <p className="mb-2">
+                <strong>{trade.proposer.userName}</strong> pakub selle vastu sinu toodet{' '}
+                <Link to={`/products/${trade.offered.id}`}>
+                  {trade.offered.name}
+                </Link>
+              </p>
+              <button
+                className="btn btn-sm btn-success me-2"
+                onClick={() => handleAccept(trade)}
+              >
+                Nõustu
+              </button>
+              <button
+                className="btn btn-sm btn-danger"
+                onClick={() => handleReject(trade)}
+              >
+                Keeldu
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* SECTION: My Products */}
       <h2 className="mt-5 mb-4">Minu tooted</h2>
-      {products.length === 0 && (
+      {products.length === 0 ? (
         <div className="alert alert-info">
           Sul pole veel ühtegi toodet.
         </div>
-      )}
-      <div className="row">
-        {products.map(p => {
-          // pick first image or placeholder
-          const thumb = (p.imageUrls && p.imageUrls.length > 0)
-            ? p.imageUrls[0]
-            : 'https://via.placeholder.com/400x300';
-  
-          // format date safely
-          const addedDate = p.createdAt
-            ? new Date(p.createdAt).toLocaleDateString()
-            : '—';
-  
-          return (
+      ) : (
+        <div className="row">
+          {products.map(p => (
             <div key={p.id} className="col-md-6 mb-4">
               <div className="card h-100">
                 <img
-                  src={thumb}
+                  src={p.imageUrl || 'https://via.placeholder.com/400x300'}
                   className="card-img-top"
                   alt={p.name}
                   style={{ height: '200px', objectFit: 'cover' }}
@@ -98,11 +118,16 @@ export default function MyProducts() {
                     <strong>Kategooria:</strong> {p.category.name}
                   </p>
                   <p className="mb-1">
-                    <strong>Lisatud:</strong> {addedDate}
+                    <strong>Lisatud:</strong>{' '}
+                    {new Date(p.createdAt).toLocaleDateString()}
                   </p>
                   <p className="mb-3">
                     <strong>Staatus:</strong>{' '}
-                    <span className={`badge rounded-pill ${p.status === 'Sold' ? 'bg-danger' : 'bg-success'}`}>
+                    <span
+                      className={`badge rounded-pill ${
+                        p.status === 'Sold' ? 'bg-danger' : 'bg-success'
+                      }`}
+                    >
                       {p.status === 'Sold' ? 'Müüdud' : 'Saadaval'}
                     </span>
                   </p>
@@ -115,9 +140,9 @@ export default function MyProducts() {
                 </div>
               </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
