@@ -62,41 +62,8 @@ export default function MyProducts() {
 
   return (
     <div className="container my-5">
-      {/* SECTION: Exchange Proposals */}
-      <h2 className="mb-4">Vahetuspakkumised</h2>
-      {trades.length === 0 ? (
-        <div className="alert alert-info">
-          Sul pole praegu ühtegi vahetuspakkumist.
-        </div>
-      ) : (
-        trades.map(trade => (
-          <div key={trade.id} className="card mb-3">
-            <div className="card-body">
-              <p className="mb-2">
-                <strong>{trade.requester.userName}</strong> pakub selle
-                vastu sinu toodet{' '}
-                <Link to={`/products/${trade.offeredProductId}`}>
-                  {trade.offeredName}
-                </Link>
-              </p>
-              <button
-                className="btn btn-sm btn-success me-2"
-                onClick={() => handleAccept(trade)}
-              >
-                Nõustu
-              </button>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => handleReject(trade)}
-              >
-                Keeldu
-              </button>
-            </div>
-          </div>
-        ))
-      )}
-
-      {/* SECTION: My Products */}
+      {/* ...trades section... */}
+  
       <h2 className="mt-5 mb-4">Minu tooted</h2>
       {products.length === 0 && (
         <div className="alert alert-info">
@@ -104,45 +71,52 @@ export default function MyProducts() {
         </div>
       )}
       <div className="row">
-        {products.map(p => (
-          <div key={p.id} className="col-md-6 mb-4">
-            <div className="card h-100">
-              <img
-                src={p.imageUrl || 'https://via.placeholder.com/400x300'}
-                className="card-img-top"
-                alt={p.name}
-                style={{ height: '200px', objectFit: 'cover' }}
-              />
-              <div className="card-body d-flex flex-column">
-                <h5 className="card-title">{p.name}</h5>
-                <p className="text-success mb-1">€{p.price}</p>
-                <p className="mb-1">
-                  <strong>Kategooria:</strong> {p.category.name}
-                </p>
-                <p className="mb-1">
-                  <strong>Lisatud:</strong>{' '}
-                  {new Date(p.createdAt).toLocaleDateString()}
-                </p>
-                <p className="mb-3">
-                  <strong>Staatus:</strong>{' '}
-                  <span
-                    className={`badge rounded-pill ${
-                      p.status === 'Sold' ? 'bg-danger' : 'bg-success'
-                    }`}
+        {products.map(p => {
+          // pick first image or placeholder
+          const thumb = (p.imageUrls && p.imageUrls.length > 0)
+            ? p.imageUrls[0]
+            : 'https://via.placeholder.com/400x300';
+  
+          // format date safely
+          const addedDate = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString()
+            : '—';
+  
+          return (
+            <div key={p.id} className="col-md-6 mb-4">
+              <div className="card h-100">
+                <img
+                  src={thumb}
+                  className="card-img-top"
+                  alt={p.name}
+                  style={{ height: '200px', objectFit: 'cover' }}
+                />
+                <div className="card-body d-flex flex-column">
+                  <h5 className="card-title">{p.name}</h5>
+                  <p className="text-success mb-1">€{p.price}</p>
+                  <p className="mb-1">
+                    <strong>Kategooria:</strong> {p.category.name}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Lisatud:</strong> {addedDate}
+                  </p>
+                  <p className="mb-3">
+                    <strong>Staatus:</strong>{' '}
+                    <span className={`badge rounded-pill ${p.status === 'Sold' ? 'bg-danger' : 'bg-success'}`}>
+                      {p.status === 'Sold' ? 'Müüdud' : 'Saadaval'}
+                    </span>
+                  </p>
+                  <Link
+                    to={`/products/${p.id}`}
+                    className="btn btn-outline-primary mt-auto"
                   >
-                    {p.status === 'Sold' ? 'Müüdud' : 'Saadaval'}
-                  </span>
-                </p>
-                <Link
-                  to={`/products/${p.id}`}
-                  className="btn btn-outline-primary mt-auto"
-                >
-                  Vaata detailid
-                </Link>
+                    Vaata detailid
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

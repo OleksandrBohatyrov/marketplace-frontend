@@ -1,236 +1,314 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+// File: src/pages/SellPage.jsx
+
+import React, { useEffect, useState } from 'react'
+import { useForm, Controller }     from 'react-hook-form'
+import { useNavigate }             from 'react-router-dom'
+import api                         from '../services/api'
+import Select                      from 'react-select'
+import CreatableSelect             from 'react-select/creatable'
+import { useDropzone }             from 'react-dropzone'
+import DatePicker                  from 'react-datepicker'
+import imageCompression            from 'browser-image-compression'
+import {
+  Container,
+  Form,
+  Button,
+  Row,
+  Col,
+  Alert,
+  Image
+} from 'react-bootstrap'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'react-datepicker/dist/react-datepicker.css'
 
 export default function SellPage() {
   const navigate = useNavigate()
-
-  // Common product fields
-  const [name, setName]             = useState('')
-  const [description, setDesc]      = useState('')
-  const [price, setPrice]           = useState('')
-  const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState([])
-  const [tags, setTags]             = useState([])
-  const [selectedTags, setSelectedTags] = useState([])
+  const [tagsOptions, setTagsOptions] = useState([])
   const [error, setError]           = useState('')
+  const [fileError, setFileError]   = useState('')
 
-  // Auction-specific
-  const [isAuction, setIsAuction]   = useState(false)
-  const [minBid, setMinBid]         = useState('')
-  const [durationHours, setDurationHours] = useState('')
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      category: null,
+      tagNames: [],   // <-- free-form tag names
+      images: [],     // will hold compressed WebP files
+      isAuction: false,
+      minBid: '',
+      endsAt: null
+    }
+  })
 
-  const fileInput = useRef()
+  const isAuction = watch('isAuction')
 
+  // Fetch current user, categories, and existing tags for suggestions
   useEffect(() => {
     api.get('/api/users/me', { withCredentials: true })
-      .catch(() => navigate('/login', { replace: true }))
-
+       .catch(() => navigate('/login', { replace: true }))
     api.get('/api/categories')
-      .then(r => setCategories(r.data))
-      .catch(console.error)
+       .then(r => setCategories(r.data))
     api.get('/api/tags')
-      .then(r => setTags(r.data))
-      .catch(console.error)
+       .then(r =>
+         // we only need tag **names** to suggest
+         setTagsOptions(r.data.map(t => ({ label: t.name, value: t.name })))
+       )
   }, [navigate])
 
-  const toggleTag = id => {
-    setSelectedTags(prev => {
-      if (prev.includes(id)) return prev.filter(x => x !== id)
-      if (prev.length < 5)      return [...prev, id]
-      return prev
-    })
-  }
+  // Dropzone + image compression
+  const {
+    getRootProps,
+    getInputProps,
+    acceptedFiles,
+    fileRejections
+  } = useDropzone({
+    accept: {
+      'image/jpeg': [],
+      'image/png':  [],
+      'image/webp': []
+    },
+    maxFiles: 4,
+    maxSize: 5 * 1024 * 1024, // 5 MB
+    onDrop: async (accepted, rejected) => {
+      if (rejected.length > 0) {
+        const err = rejected[0].errors[0]
+        if (err.code === 'file-invalid-type')
+          setFileError('Lubatud formaadid: JPEG, PNG, WEBP.')
+        else if (err.code === 'file-too-large')
+          setFileError('Max 5 MB iga faili kohta.')
+        else if (err.code === 'too-many-files')
+          setFileError('Max 4 pilti korraga.')
+        return
+      }
+      setFileError('')
+      try {
+        const compressed = await Promise.all(
+          accepted.map(file =>
+            imageCompression(file, {
+              maxSizeMB: 1,
+              useWebWorker: true,
+              fileType: 'image/webp'
+            })
+          )
+        )
+        setValue('images', compressed, { shouldValidate: true })
+      } catch {
+        setFileError('Pildi konverteerimine ebaõnnestus.')
+      }
+    }
+  })
 
-  const handleSubmit = async e => {
-    e.preventDefault()
+  const onSubmit = async data => {
     setError('')
-
-    const files = fileInput.current.files
-    if (!name || (!isAuction && !price) || !categoryId) {
-      setError('Täida kõik kohustuslikud väljad.')
-      return
-    }
-    if (selectedTags.length > 5) {
-      setError('Maksimaalselt 5 silti.')
-      return
-    }
-    if (files.length === 0) {
+    if (!data.images.length) {
       setError('Vali vähemalt üks pilt.')
       return
-    }
-    if (files.length > 4) {
-      setError('Max 4 pilti.')
-      return
-    }
-    if (isAuction) {
-      if (!minBid || !durationHours) {
-        setError('Sisesta minimaalne pakkumine ja kestus.')
-        return
-      }
-      if (+durationHours <= 0) {
-        setError('Kestus peab olema > 0.')
-        return
-      }
     }
 
     try {
       const form = new FormData()
-      form.append('Name', name)
-      form.append('Description', description)
-      form.append('Price', parseFloat(price) || 0)
-      form.append('CategoryId', parseInt(categoryId, 10))
-      selectedTags.forEach(id => form.append('TagIds', id))
-      for (let i = 0; i < files.length; i++) {
-        form.append('Image', files[i])
+      form.append('Name', data.name)
+      form.append('Description', data.description)
+      form.append('CategoryId', data.category)
+      form.append('Price', data.price || 0)
+      data.tagNames.forEach(name => form.append('TagNames', name))
+      data.images.forEach(f => form.append('Images', f, `${f.name}.webp`))
+      form.append('IsAuction', data.isAuction)
+      if (data.isAuction) {
+        form.append('MinBid', data.minBid)
+        form.append('EndsAt', data.endsAt.toISOString())
       }
 
-      // Auction fields
-      form.append('IsAuction', isAuction)                  // backend DTO must accept
-      if (isAuction) {
-        form.append('MinBid', parseFloat(minBid))
-        // End time = now + hours
-        const endsAt = new Date(Date.now() + durationHours*3600*1000)
-        form.append('EndsAt', endsAt.toISOString())
-      }
-
-      await api.post(
-        '/api/products',
-        form,
-        {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' }
-        }
-      )
+      await api.post('/api/products', form, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       navigate('/', { replace: true })
-    } catch (err) {
-      console.error(err)
-      if (err.response?.status === 401) {
-        navigate('/login', { replace: true })
-      } else {
-        setError('Toote avaldamine ebaõnnestus.')
-      }
+    } catch (e) {
+      console.error(e)
+      setError('Toote avaldamine ebaõnnestus.')
     }
   }
 
   return (
-    <div className="container my-5">
-      <h2 className="mb-4">Lisa uus toode</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
+    <Container style={{ maxWidth: 700 }} className="my-5">
+      <h2>Lisa uus toode</h2>
+      {error && <Alert variant="danger">{error}</Alert>}
 
-      <form onSubmit={handleSubmit} encType="multipart/form-data" style={{ maxWidth: 600 }}>
+      <Form onSubmit={handleSubmit(onSubmit)} noValidate>
         {/* Name */}
-        <div className="mb-3">
-          <label className="form-label">Nimi *</label>
-          <input type="text"
-                 className="form-control"
-                 value={name}
-                 onChange={e => setName(e.target.value)} />
-        </div>
+        <Form.Group className="mb-3">
+          <Form.Label>Nimi *</Form.Label>
+          <Form.Control
+            {...register('name', { required: true })}
+            isInvalid={!!errors.name}
+          />
+          <Form.Control.Feedback type="invalid">
+            Väli on kohustuslik.
+          </Form.Control.Feedback>
+        </Form.Group>
 
         {/* Description */}
-        <div className="mb-3">
-          <label className="form-label">Kirjeldus</label>
-          <textarea className="form-control"
-                    rows={3}
-                    value={description}
-                    onChange={e => setDesc(e.target.value)} />
-        </div>
+        <Form.Group className="mb-3">
+          <Form.Label>Kirjeldus</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            {...register('description')}
+          />
+        </Form.Group>
 
         {/* Category */}
-        <div className="mb-3">
-          <label className="form-label">Kategooria *</label>
-          <select className="form-select"
-                  value={categoryId}
-                  onChange={e => setCategoryId(e.target.value)}>
-            <option value="">— vali —</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Form.Group className="mb-3">
+          <Form.Label>Kategooria *</Form.Label>
+          <Controller
+            name="category"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => {
+              const opts = categories.map(c => ({ value: c.id, label: c.name }))
+              const sel  = opts.find(o => o.value === field.value) || null
+              return (
+                <Select
+                  options={opts}
+                  value={sel}
+                  onChange={opt => field.onChange(opt.value)}
+                  placeholder="— vali —"
+                  classNamePrefix="react-select"
+                />
+              )
+            }}
+          />
+          {errors.category && (
+            <div className="text-danger">Vali kategooria.</div>
+          )}
+        </Form.Group>
 
-        {/* Tags */}
-        <div className="mb-3">
-          <label className="form-label">Sildid (kuni 5)</label>
-          <div className="d-flex flex-wrap">
-            {tags.map(tag => (
-              <button type="button"
-                      key={tag.id}
-                      onClick={() => toggleTag(tag.id)}
-                      className={
-                        'btn me-2 mb-2 ' +
-                        (selectedTags.includes(tag.id)
-                          ? 'btn-primary'
-                          : 'btn-outline-secondary')
-                      }>
-                {tag.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Tags (free-form) */}
+        <Form.Group className="mb-3">
+          <Form.Label>Sildid (kirjuta või vali olemasolev, max 5)</Form.Label>
+          <Controller
+            name="tagNames"
+            control={control}
+            rules={{ validate: v => v.length <= 5 }}
+            render={({ field }) => {
+              // suggestions from existing tagsOptions
+              const value = field.value.map(n => ({ label: n, value: n }))
+              return (
+                <CreatableSelect
+                  isMulti
+                  options={tagsOptions}
+                  value={value}
+                  onChange={items => field.onChange(items.map(i => i.value))}
+                  placeholder="Kirjuta uus või vali…"
+                  classNamePrefix="react-select"
+                />
+              )
+            }}
+          />
+          {errors.tagNames && (
+            <div className="text-danger">Max 5 silti.</div>
+          )}
+        </Form.Group>
 
         {/* Images */}
-        <div className="mb-3">
-          <label className="form-label">Pildid (1–4) *</label>
-          <input type="file"
-                 accept="image/*"
-                 multiple
-                 ref={fileInput}
-                 className="form-control" />
-        </div>
-
-        {/* Sale type toggle */}
-        <div className="form-check mb-3">
-          <input className="form-check-input"
-                 type="checkbox"
-                 id="auctionToggle"
-                 checked={isAuction}
-                 onChange={() => setIsAuction(f => !f)} />
-          <label className="form-check-label" htmlFor="auctionToggle">
-            Müü oksjonina
-          </label>
-        </div>
-
-        {/* If auction: min bid & duration */}
-        {isAuction && (
-          <>
-            <div className="mb-3">
-              <label className="form-label">Minimaalne pakkumine (€) *</label>
-              <input type="number"
-                     step="0.01"
-                     className="form-control"
-                     value={minBid}
-                     onChange={e => setMinBid(e.target.value)} />
+        <Form.Group className="mb-4">
+          <Form.Label>Pildid (1–4, JPEG/PNG/WEBP, ≤ 5 MB)</Form.Label>
+          <div
+            {...getRootProps()}
+            className="border rounded p-4 text-center"
+            style={{ cursor: 'pointer' }}
+          >
+            <input {...getInputProps()} />
+            <p>Drag & drop või kliki siia</p>
+            {fileError && <div className="text-danger">{fileError}</div>}
+            <div className="d-flex flex-wrap justify-content-center mt-3">
+              {acceptedFiles.map(file => (
+                <Image
+                  key={file.name}
+                  src={URL.createObjectURL(file)}
+                  thumbnail
+                  width={70}
+                  height={70}
+                  className="m-1"
+                />
+              ))}
             </div>
-            <div className="mb-4">
-              <label className="form-label">Kestus (tundides) *</label>
-              <input type="number"
-                     className="form-control"
-                     value={durationHours}
-                     onChange={e => setDurationHours(e.target.value)} />
-            </div>
-          </>
-        )}
-
-        {/* Regular price (if direct sale) */}
-        {!isAuction && (
-          <div className="mb-4">
-            <label className="form-label">Hind (€) *</label>
-            <input type="number"
-                   step="0.01"
-                   className="form-control"
-                   value={price}
-                   onChange={e => setPrice(e.target.value)} />
           </div>
+        </Form.Group>
+
+        {/* Auction switch */}
+        <Form.Group className="mb-3">
+          <Form.Check
+            type="switch"
+            label="Müü oksjonina"
+            {...register('isAuction')}
+          />
+        </Form.Group>
+
+        {/* Auction fields */}
+        {isAuction && (
+          <Row className="g-3 mb-4">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Min. pakkumine (€) *</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  {...register('minBid', { required: true })}
+                  isInvalid={!!errors.minBid}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Lõppkuupäev *</Form.Label>
+                <Controller
+                  name="endsAt"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      selected={field.value}
+                      onChange={field.onChange}
+                      showTimeSelect
+                      dateFormat="Pp"
+                      className="form-control"
+                    />
+                  )}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         )}
 
-        <button type="submit" className="btn btn-primary">
+        {/* Direct-sale price */}
+        {!isAuction && (
+          <Form.Group className="mb-4">
+            <Form.Label>Hind (€) *</Form.Label>
+            <Form.Control
+              type="number"
+              step="0.01"
+              {...register('price', { required: true })}
+              isInvalid={!!errors.price}
+            />
+          </Form.Group>
+        )}
+
+        <Button variant="primary" type="submit" className="w-100">
           Avalda
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Form>
+    </Container>
   )
 }

@@ -1,190 +1,223 @@
 import React, { useEffect, useState } from 'react'
 import api from '../services/api'
 import { Link } from 'react-router-dom'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import '../styles/Home.css' // your custom hover styles
 
 export default function Home() {
-  const [products, setProducts]       = useState(null)
-  const [categories, setCategories]   = useState(null)
-  const [tags, setTags]               = useState(null)
-  const [search, setSearch]           = useState('')
+  const [products, setProducts]     = useState([])
+  const [categories, setCategories] = useState([])
+  const [tags, setTags]             = useState([])
+  const [search, setSearch]         = useState('')
   const [selectedCats, setSelectedCats] = useState(new Set())
   const [selectedTags, setSelectedTags] = useState(new Set())
-  const [sortOrder, setSortOrder]     = useState('')
-  const now = new Date();
+  const [sortOrder, setSortOrder]   = useState('')
+  const [priceRange, setPriceRange] = useState([0, 0])
+  const [selPrice, setSelPrice]     = useState([0, 0])
 
+  // Load feed + categories + tags
   useEffect(() => {
     Promise.all([
       api.get('/api/products/feed'),
       api.get('/api/categories'),
-      api.get('/api/tags')
+      api.get('/api/tags'),
     ])
-    .then(([prdRes, catRes, tagRes]) => {
-      setProducts(prdRes.data)
-      setCategories(catRes.data)
-      setTags(tagRes.data)
+    .then(([prd, cat, tag]) => {
+      // flatten category id
+      const normalized = prd.data.map(p => ({
+        ...p,
+        categoryId: p.category.id,
+      }))
+      setProducts(normalized)
+      setCategories(cat.data)
+      setTags(tag.data)
+
+      // compute price slider bounds
+      const prices = normalized.map(p => p.price)
+      const min = Math.min(...prices)
+      const max = Math.max(...prices)
+      setPriceRange([min, max])
+      setSelPrice([min, max])
     })
     .catch(console.error)
   }, [])
 
-  if (!products || !categories || !tags) {
-    return (
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 vh-100">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Laadimine…</span>
-        </div>
-      </div>
-    )
-  }
+  const now = new Date()
 
+  // apply filters
   const filtered = products
-  // 0) убрать товары-аукционы, у которых время окончания ≤ сейчас
-  .filter(p => {
-    if (p.isAuction && p.endsAt) {
-      const end = new Date(p.endsAt);
-      return end > now;
-    }
-    return true;
-  })
+    .filter(p => !(p.isAuction && p.endsAt && new Date(p.endsAt) <= now))
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(p => !selectedCats.size || selectedCats.has(p.categoryId))
+    .filter(p => !selectedTags.size || p.tags.some(t => selectedTags.has(t.id)))
+    .filter(p => p.price >= selPrice[0] && p.price <= selPrice[1])
 
-  // 1) поиск по имени
-  .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-
-  // 2) фильтрация по категориям
-  .filter(p => selectedCats.size === 0 || selectedCats.has(p.categoryId))
-
-  // 3) фильтрация по тегам
-  .filter(p => {
-    if (selectedTags.size === 0) return true;
-    const prodTagIds = p.tags.map(t => t.id);
-    return [...selectedTags].some(id => prodTagIds.includes(id));
-  });
-
-// а теперь уже сортируем
-const sorted = [...filtered];
-if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price);
-if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price);
+  const sorted = [...filtered]
+  if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price)
+  if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price)
 
   const toggleCat = id => {
-    const s = new Set(selectedCats)
-    s.has(id) ? s.delete(id) : s.add(id)
-    setSelectedCats(s)
+    setSelectedCats(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
   }
 
   const toggleTag = id => {
-    const s = new Set(selectedTags)
-    s.has(id) ? s.delete(id) : s.add(id)
-    setSelectedTags(s)
+    setSelectedTags(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
+  }
+
+  const onMinChange = e => {
+    const v = +e.target.value
+    setSelPrice([Math.min(v, selPrice[1]), selPrice[1]])
+  }
+  const onMaxChange = e => {
+    const v = +e.target.value
+    setSelPrice([selPrice[0], Math.max(v, selPrice[0])])
   }
 
   return (
-    <section>
-      <div className="container my-4">
-        <h2 className="mb-4">Toodete voog</h2>
-
-        {/* Search & Sort */}
-        <div className="row mb-3 g-2 align-items-center">
-          <div className="col-md-6">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Otsi toote nime järgi…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="col-md-3">
-            <select
-              className="form-select"
-              value={sortOrder}
-              onChange={e => setSortOrder(e.target.value)}
-            >
-              <option value="">Ilma sorteerimiseta</option>
-              <option value="asc">Hind ↑</option>
-              <option value="desc">Hind ↓</option>
-            </select>
-          </div>
+    <div className="container my-4">
+      {/* Search & sort */}
+      <div className="row mb-3 gx-2 align-items-center">
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Otsi toote nime järgi…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
+        <div className="col-md-3">
+          <select
+            className="form-select"
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+          >
+            <option value="">Ilma sorteerimiseta</option>
+            <option value="asc">Hind ↑</option>
+            <option value="desc">Hind ↓</option>
+          </select>
+        </div>
+      </div>
 
-        <div className="row">
-          {/* Products Grid */}
-          <div className="col-lg-7">
-            {sorted.length === 0 ? (
-              <div className="alert alert-warning">
-                Päringule ei vastanud ükski toode.
+      <div className="row">
+        {/* Sidebar */}
+        <aside className="col-lg-3 mb-4">
+          {/* Price filter */}
+          <div className="card mb-3">
+            <div className="card-header"><h5 className="mb-0">Hind</h5></div>
+            <div className="card-body">
+              <div className="d-flex justify-content-between mb-2">
+                <small>€{selPrice[0]}</small>
+                <small>€{selPrice[1]}</small>
               </div>
-            ) : (
-              <div className="row">
-                {sorted.map(p => (
-                  <div key={p.id} className="col-md-6 mb-4">
-                    <div className="card h-100">
-                      <img
-                        src={p.imageUrl || 'https://via.placeholder.com/400x300'}
-                        className="card-img-top"
-                        alt={p.name}
-                        style={{ height: '180px', objectFit: 'cover' }}
-                      />
-                      <div className="card-body d-flex flex-column">
-                        <h5 className="card-title">{p.name}</h5>
-                        <p className="text-success mb-2">€{p.price}</p>
-                        <Link to={`/products/${p.id}`} className="mt-auto btn btn-primary">
-                          Vaata
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+              <input
+                type="range"
+                className="form-range"
+                min={priceRange[0]}
+                max={priceRange[1]}
+                value={selPrice[0]}
+                onChange={onMinChange}
+              />
+              <input
+                type="range"
+                className="form-range mt-2"
+                min={priceRange[0]}
+                max={priceRange[1]}
+                value={selPrice[1]}
+                onChange={onMaxChange}
+              />
+            </div>
           </div>
+          {/* Category filter */}
+          <div className="card mb-3">
+            <div className="card-header"><h5 className="mb-0">Kategooriad</h5></div>
+            <ul className="list-group list-group-flush">
+              {categories.map(cat => (
+                <li key={cat.id} className="list-group-item py-1">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`cat-${cat.id}`}
+                      checked={selectedCats.has(cat.id)}
+                      onChange={() => toggleCat(cat.id)}
+                    />
+                    <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+                      {cat.name}
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Tag filter */}
+          <div className="card">
+            <div className="card-header"><h5 className="mb-0">Sildid</h5></div>
+            <ul className="list-group list-group-flush">
+              {tags.map(tag => (
+                <li key={tag.id} className="list-group-item py-1">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`tag-${tag.id}`}
+                      checked={selectedTags.has(tag.id)}
+                      onChange={() => toggleTag(tag.id)}
+                    />
+                    <label className="form-check-label" htmlFor={`tag-${tag.id}`}>
+                      {tag.name}
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
 
-          {/* Filters */}
-          <div className="col-lg-5">
-            <div className="card mb-3">
-              <div className="card-header"><h5 className="mb-0">Kategooriad</h5></div>
-              <ul className="list-group list-group-flush">
-                {categories.map(cat => (
-                  <li key={cat.id} className="list-group-item">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`cat-${cat.id}`}
-                        checked={selectedCats.has(cat.id)}
-                        onChange={() => toggleCat(cat.id)}
-                      />
-                      <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                        {cat.name}
-                      </label>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+        {/* Product grid */}
+        <div className="col-lg-9">
+          {sorted.length === 0 && (
+            <div className="alert alert-warning">
+              Päringule ei vastanud ükski toode.
             </div>
-
-            <div className="card">
-              <div className="card-header"><h5 className="mb-0">Sildid</h5></div>
-              <ul className="list-group list-group-flush">
-                {tags.map(tag => (
-                  <li key={tag.id} className="list-group-item">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`tag-${tag.id}`}
-                        checked={selectedTags.has(tag.id)}
-                        onChange={() => toggleTag(tag.id)}
-                      />
-                      <label className="form-check-label" htmlFor={`tag-${tag.id}`}>
-                        {tag.name}
-                      </label>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          )}
+          <div className="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+            {sorted.map(p => (
+              <div key={p.id} className="col">
+                <Link
+                  to={`/products/${p.id}`}
+                  className="card h-100 product-card text-decoration-none text-dark"
+                >
+                  <img
+                    src={
+                      p.imageUrls && p.imageUrls.length > 0
+                        ? p.imageUrls[0]
+                        : 'https://via.placeholder.com/400x300'
+                    }
+                    className="card-img-top"
+                    alt={p.name}
+                    style={{ objectFit: 'cover', height: '140px' }}
+                  />
+                  <div className="card-body p-2 d-flex justify-content-between align-items-center">
+                    <h6 className="card-title mb-0 text-truncate" style={{ maxWidth: '120px' }}>
+                      {p.name}
+                    </h6>
+                    <span className="fw-bold text-success">€{p.price}</span>
+                  </div>
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
