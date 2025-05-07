@@ -29,7 +29,7 @@ export default function Home() {
           ...p,
           categoryId: p.category.id,
           imageUrl: p.ImageUrls && p.ImageUrls.length > 0
-            ? p.ImageUrls[0]
+            ? p.imageUrls[0]
             : null
         }));
         setProducts(normalized)
