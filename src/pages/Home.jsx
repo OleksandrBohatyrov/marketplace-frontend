@@ -10,6 +10,7 @@ export default function Home() {
   const [selectedCats, setSelectedCats] = useState(new Set())
   const [selectedTags, setSelectedTags] = useState(new Set())
   const [sortOrder, setSortOrder]     = useState('')
+  const now = new Date();
 
   useEffect(() => {
     Promise.all([
@@ -36,20 +37,32 @@ export default function Home() {
   }
 
   const filtered = products
-    // 2) поиск по имени
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-    // 3) категория
-    .filter(p => selectedCats.size === 0 || selectedCats.has(p.categoryId))
-    // 4) теги (хотя у вас в карточке теги не выводятся, но фильтр есть)
-    .filter(p => {
-      if (selectedTags.size === 0) return true
-      const prodTagIds = p.tags.map(t => t.id)
-      return [...selectedTags].some(id => prodTagIds.includes(id))
-    })
+  // 0) убрать товары-аукционы, у которых время окончания ≤ сейчас
+  .filter(p => {
+    if (p.isAuction && p.endsAt) {
+      const end = new Date(p.endsAt);
+      return end > now;
+    }
+    return true;
+  })
 
-  const sorted = [...filtered]
-  if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price)
-  if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price)
+  // 1) поиск по имени
+  .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+
+  // 2) фильтрация по категориям
+  .filter(p => selectedCats.size === 0 || selectedCats.has(p.categoryId))
+
+  // 3) фильтрация по тегам
+  .filter(p => {
+    if (selectedTags.size === 0) return true;
+    const prodTagIds = p.tags.map(t => t.id);
+    return [...selectedTags].some(id => prodTagIds.includes(id));
+  });
+
+// а теперь уже сортируем
+const sorted = [...filtered];
+if (sortOrder === 'asc')  sorted.sort((a, b) => a.price - b.price);
+if (sortOrder === 'desc') sorted.sort((a, b) => b.price - a.price);
 
   const toggleCat = id => {
     const s = new Set(selectedCats)
