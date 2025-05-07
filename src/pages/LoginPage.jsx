@@ -116,16 +116,6 @@ export default function LoginPage() {
                   <hr className="flex-grow-1" />
                 </div>
 
-                {/* Sotsiaalmeedia */}
-                <button
-                  type="button"
-                  className="btn btn-primary w-100 mb-2"
-                  style={{ backgroundColor: '#cf3723' }}
-                >
-                  <i className="fa-brands fa-google me-2"></i>
-                  Jätka Google'iga
-                </button>
-
                 {/* All link */}
                 <p className="text-center mt-3 mb-0 small">
                   Pole veel kontot?{' '}
