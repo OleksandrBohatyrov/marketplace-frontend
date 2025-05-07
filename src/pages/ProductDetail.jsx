@@ -11,93 +11,113 @@ export default function ProductDetail() {
   const { refreshCartCount } = useCart()
 
   const [product, setProduct] = useState(null)
+  const [myProducts, setMyProducts] = useState([])
+  const [showTrade, setShowTrade] = useState(false)
+  const [offeredId, setOfferedId] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // загрузка товара
   useEffect(() => {
     setLoading(true)
     api.get(`/api/products/${id}`)
       .then(res => setProduct(res.data))
-      .catch(err => console.error(err))
       .finally(() => setLoading(false))
   }, [id])
 
+  // загрузка ваших товаров (для обмена)
+  useEffect(() => {
+    if (user) {
+      api.get('/api/products/my-products')
+        .then(res => setMyProducts(res.data))
+        .catch(console.error)
+    }
+  }, [user])
+
   const handleAddToCart = async () => {
-    if (!user) {
-      window.alert('Palun logi esmalt sisse või loo konto.')
-      return
-    }
-    if (user.id === String(product.sellerId)) {
-      window.alert("Sa ei saa omaenda toodet ostukorvi lisada.")
-      return
-    }
+    if (!user) { alert('Palun login'); return }
+    if (user.id === product.sellerId) { alert('Oma toodet'); return }
+    await api.post(`/api/cart/add/${product.id}`)
+    alert('Lisatud ostukorvi')
+    refreshCartCount()
+  }
+
+  const handlePropose = () => {
+    setShowTrade(true)
+  }
+
+  const sendTrade = async () => {
+    if (!offeredId) { alert('Vali toode'); return }
     try {
-      await api.post(`/api/cart/add/${product.id}`)
-      window.alert('Toode lisati ostukorvi!')
-      refreshCartCount()
+      await api.post('/api/trades', {
+        requestedProductId: product.id,
+        offeredProductId: offeredId
+      })
+      alert('Kõne tehtud!')
+      setShowTrade(false)
+      setOfferedId(null)
     } catch (err) {
       console.error(err)
-      window.alert(err.response?.data?.message || 'Toote lisamine ostukorvi ebaõnnestus.')
+      alert(err.response?.data || 'Error')
     }
   }
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Laadimine…</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (!product) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="alert alert-warning">Toodet ei leitud.</div>
-      </div>
-    )
-  }
+  if (loading) return <div>Loading…</div>
+  if (!product) return <div>Toodet ei leitud</div>
 
   return (
     <section className="vh-100">
       <div className="container my-5">
         <div className="row g-4">
+          {/* Изображение */}
           <div className="col-md-5">
-            <div className="card">
-              <img
-                src={product.imageUrl || 'https://via.placeholder.com/600x400'}
-                className="card-img-top"
-                alt={product.name}
-              />
-            </div>
+            <img
+              src={product.imageUrl}
+              className="img-fluid"
+              alt={product.name}
+            />
           </div>
 
+          {/* Данные */}
           <div className="col-md-7">
-            <h1 className="mb-3">{product.name}</h1>
-            <h3 className="text-success mb-2">€{product.price}</h3>
-            <p className="lead">{product.description}</p>
-
+            <h1>{product.name}</h1>
+            <h3 className="text-success">€{product.price}</h3>
+            <p>{product.description}</p>
             <p><strong>Kategooria:</strong> {product.category.name}</p>
+            {/* Кнопки */}
+            <button className="btn btn-primary me-2" onClick={handleAddToCart}>
+              Lisa ostukorvi
+            </button>
+            <button className="btn btn-secondary me-2" onClick={handlePropose}>
+              Paku vahetust
+            </button>
+            <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+              Tagasi
+            </button>
 
-            {product.tags?.length > 0 && (
-              <p>
-                <strong>Sildid:</strong>{' '}
-                {product.tags.map(tag => (
-                  <span key={tag.id} className="badge bg-secondary me-1">
-                    {tag.name}
-                  </span>
-                ))}
-              </p>
+            {/* Модал/селект для обмена */}
+            {showTrade && (
+              <div className="mt-4 p-3 border rounded">
+                <h5>Vali, millist toodet pakud:</h5>
+                <select
+                  className="form-select mb-2"
+                  value={offeredId || ''}
+                  onChange={e => setOfferedId(Number(e.target.value))}
+                >
+                  <option value="">— vali oma toode —</option>
+                  {myProducts.map(mp => (
+                    <option key={mp.id} value={mp.id}>
+                      {mp.name} (€{mp.price})
+                    </option>
+                  ))}
+                </select>
+                <button className="btn btn-success me-2" onClick={sendTrade}>
+                  Saada ettepanek
+                </button>
+                <button className="btn btn-link" onClick={() => setShowTrade(false)}>
+                  Katkesta
+                </button>
+              </div>
             )}
-
-            <div className="mt-4">
-              <button className="btn btn-primary me-2" onClick={handleAddToCart}>
-                <i className="bi bi-cart-plus-fill me-1"></i> Lisa ostukorvi
-              </button>
-              <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
-                <i className="bi bi-arrow-left me-1"></i> Tagasi
-              </button>
-            </div>
           </div>
         </div>
       </div>
