@@ -7,31 +7,32 @@ import api from '../services/api'
 import '../styles/Navbar.css'
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
-  const isAuthenticated = Boolean(user)
+	const { user, logout } = useAuth()
+	const isAuthenticated = Boolean(user)
+	const isAdmin = user?.roles?.includes('Admin')
 
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
-  const navigate = useNavigate()
+	const [menuOpen, setMenuOpen] = useState(false)
+	const [cartCount, setCartCount] = useState(0)
+	const navigate = useNavigate()
 
-  const fetchCount = () => {
-    api.get('/api/cart/count', { withCredentials: true })
-      .then(res => setCartCount(res.data.count))
-      .catch(() => setCartCount(0))
-  }
+	const fetchCount = () => {
+		api.get('/api/cart/count', { withCredentials: true })
+			.then(res => setCartCount(res.data.count))
+			.catch(() => setCartCount(0))
+	}
 
-  useEffect(() => {
-    if (isAuthenticated) fetchCount()
+	useEffect(() => {
+		if (isAuthenticated) fetchCount()
 
-    const handler = () => {
-      fetchCount()
-    }
-    window.addEventListener('cartChanged', handler)
+		const handler = () => {
+			fetchCount()
+		}
+		window.addEventListener('cartChanged', handler)
 
-    return () => {
-      window.removeEventListener('cartChanged', handler)
-    }
-  }, [isAuthenticated])
+		return () => {
+			window.removeEventListener('cartChanged', handler)
+		}
+	}, [isAuthenticated])
 
 	const toggleMenu = () => setMenuOpen(o => !o)
 
