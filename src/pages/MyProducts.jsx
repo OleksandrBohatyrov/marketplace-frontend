@@ -119,9 +119,13 @@ export default function MyProducts() {
                       ? p.imageUrls[0]
                       : 'https://via.placeholder.com/400x300'
                   }
-                  className="card-img-top"
                   alt={p.name}
-                  style={{ height: '200px', objectFit: 'cover' }}
+                  className="card-img-top"
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover'
+                  }}
                 />
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{p.name}</h5>
@@ -130,7 +134,8 @@ export default function MyProducts() {
                     <strong>Kategooria:</strong> {p.category.name}
                   </p>
                   <p className="mb-1">
-                    <strong>Lisatud:</strong> {new Date(p.createdAt).toLocaleDateString()}
+                    <strong>Lisatud:</strong>{' '}
+                    {new Date(p.createdAt).toLocaleDateString()}
                   </p>
                   <p className="mb-3">
                     <strong>Staatus:</strong>{' '}

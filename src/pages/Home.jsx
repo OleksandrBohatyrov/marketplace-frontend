@@ -27,8 +27,11 @@ export default function Home() {
         // добавляем categoryId для фильтрации
         const normalized = prdRes.data.map(p => ({
           ...p,
-          categoryId: p.category.id
-        }))
+          categoryId: p.category.id,
+          imageUrl: p.ImageUrls && p.ImageUrls.length > 0
+            ? p.imageUrls[0]
+            : null
+        }));
         setProducts(normalized)
         setCategories(catRes.data)
         setTags(tagRes.data)
@@ -55,23 +58,16 @@ export default function Home() {
       ? (p.currentBid ?? p.minBid ?? 0)
       : p.price
 
-  // последовательно применяем все фильтры
   const filtered = products
-    // убираем завершённые аукционы
     .filter(p => !(p.isAuction && p.endsAt && new Date(p.endsAt) <= now))
-    // поиск по имени
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-    // фильтр по категориям
     .filter(p => !selectedCats.size || selectedCats.has(p.categoryId))
-    // фильтр по тегам
     .filter(p => !selectedTags.size || p.tags.some(t => selectedTags.has(t.id)))
-    // фильтр по цене
     .filter(p => {
       const price = getPrice(p)
       return price >= selPrice[0] && price <= selPrice[1]
     })
 
-  // копируем массив и сортируем, если нужно
   const sorted = [...filtered]
   if (sortOrder === 'asc') {
     sorted.sort((a, b) => getPrice(a) - getPrice(b))

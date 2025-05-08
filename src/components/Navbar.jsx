@@ -1,48 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaShoppingCart, FaBell, FaUserCircle } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext';
-import logo from '../assets/hoodielogo.png';
-import '../styles/Navbar.css';
+// src/components/Navbar.jsx
+import React, { useState } from 'react'
+import { FaBars, FaShoppingCart, FaUserCircle } from 'react-icons/fa'
+import { Link, useNavigate } from 'react-router-dom'
+import logo from '../assets/hoodielogo.png'
+import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
+import '../styles/Navbar.css'
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
-  const isAuthenticated = Boolean(user);
-  const isAdmin = user?.roles?.includes('Admin');
+  const { user, logout } = useAuth()
+  const isAuthenticated = Boolean(user)
+  const isAdmin = user?.roles?.includes('Admin')
+  const { cartCount } = useCart()
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
-  const toggleMenu = () => setMenuOpen(o => !o);
+  const toggleMenu = () => setMenuOpen(o => !o)
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
+    await logout()
+    navigate('/login', { replace: true })
+  }
 
   const handleAvatarClick = () => {
-    setMenuOpen(false);
-    navigate(isAuthenticated ? '/profile' : '/login');
-  };
+    setMenuOpen(false)
+    navigate(isAuthenticated ? '/profile' : '/login')
+  }
 
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        {/* бургер */}
         <button className="navbar-toggler" type="button" onClick={toggleMenu}>
           <FaBars size={20} />
         </button>
 
-        {/* логотип */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
-          <span className="ms-2">Riidedstock</span>
+          <span className="ms-2">Riidesstock</span>
         </Link>
 
-        {/* само меню */}
         <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            {/* все витрины */}
             <li className="nav-item">
               <Link className="nav-link" to="/" onClick={() => setMenuOpen(false)}>
                 Avaleht
@@ -53,8 +52,6 @@ export default function Navbar() {
                 Müü
               </Link>
             </li>
-
-            {/* вот ссылка на мои товары */}
             {isAuthenticated && (
               <li className="nav-item">
                 <Link
@@ -66,12 +63,11 @@ export default function Navbar() {
                 </Link>
               </li>
             )}
- <li className="nav-item">
-             <Link className="nav-link" to="/chats" onClick={()=>setMenuOpen(false)}>
-             Vestlused
+            <li className="nav-item">
+              <Link className="nav-link" to="/chats" onClick={() => setMenuOpen(false)}>
+                Vestlused
               </Link>
-           </li>
-            {/* админ-меню */}
+            </li>
             {isAuthenticated && isAdmin && (
               <>
                 <li className="nav-item">
@@ -97,8 +93,7 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* иконки справа */}
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-center position-relative">
           {isAuthenticated && (
             <Link
               className="text-reset me-3 position-relative"
@@ -106,24 +101,29 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               <FaShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{ fontSize: '0.6rem' }}
+                >
+                  {cartCount}
+                </span>
+              )}
             </Link>
           )}
-          <button className="btn btn-link text-reset p-0 me-3">
-            <FaBell size={20} />
-          </button>
-          <button
-            className="btn btn-link text-reset p-0"
-            onClick={handleAvatarClick}
-          >
+          <button className="btn btn-link text-reset p-0" onClick={handleAvatarClick}>
             <FaUserCircle size={28} />
           </button>
           {isAuthenticated && (
-            <button className="btn btn-sm btn-outline-danger ms-2" onClick={handleLogout}>
+            <button
+              className="btn btn-sm btn-outline-danger ms-2"
+              onClick={handleLogout}
+            >
               Logi välja
             </button>
           )}
         </div>
       </div>
     </nav>
-  );
+  )
 }
