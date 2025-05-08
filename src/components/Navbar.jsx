@@ -36,7 +36,7 @@ export default function Navbar() {
         {/* логотип */}
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} height="30" alt="Logo" loading="lazy" />
-          <span className="ms-2">Turg</span>
+          <span className="ms-2">Riidedstock</span>
         </Link>
 
         {/* само меню */}
@@ -66,7 +66,11 @@ export default function Navbar() {
                 </Link>
               </li>
             )}
-
+ <li className="nav-item">
+             <Link className="nav-link" to="/chats" onClick={()=>setMenuOpen(false)}>
+             Vestlused
+              </Link>
+           </li>
             {/* админ-меню */}
             {isAuthenticated && isAdmin && (
               <>

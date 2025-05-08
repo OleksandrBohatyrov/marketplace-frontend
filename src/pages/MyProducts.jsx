@@ -1,13 +1,12 @@
-// src/pages/MyProducts.jsx
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 
-// Компонент страницы Мои товары
 export default function MyProducts() {
   const [products, setProducts] = useState([])
   const [trades, setTrades]     = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -45,6 +44,18 @@ export default function MyProducts() {
       alert('Vahetuspakkumine keelatud')
     } catch {
       alert('Viga kehtestamisel')
+    }
+  }
+
+  const handleDelete = async productId => {
+    if (!window.confirm('Oled kindel, et soovid selle toote kustutada?')) return
+    try {
+      await api.delete(`/api/products/${productId}`)
+      setProducts(ps => ps.filter(p => p.id !== productId))
+      alert('Toode edukalt kustutatud')
+    } catch (err) {
+      console.error('Kustutamine nurjus:', err.response?.data || err.message)
+      alert('Toote kustutamine nurjus')
     }
   }
 
@@ -131,12 +142,20 @@ export default function MyProducts() {
                       {p.status === 'Sold' ? 'Müüdud' : 'Saadaval'}
                     </span>
                   </p>
-                  <Link
-                    to={`/products/${p.id}`}
-                    className="btn btn-outline-primary mt-auto"
-                  >
-                    Vaata detailid
-                  </Link>
+                  <div className="mt-auto d-flex justify-content-between">
+                    <Link
+                      to={`/products/${p.id}`}
+                      className="btn btn-outline-primary"
+                    >
+                      Vaata detailid
+                    </Link>
+                    <button
+                      className="btn btn-outline-danger"
+                      onClick={() => handleDelete(p.id)}
+                    >
+                      Kustuta
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

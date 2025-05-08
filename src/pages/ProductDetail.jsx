@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
@@ -21,38 +21,23 @@ export default function ProductDetail() {
   const { user } = useAuth()
   const { refreshCartCount } = useCart()
 
-  const [product, setProduct]           = useState(null)
-  const [bids, setBids]                 = useState([])
-  const [myProducts, setMyProducts]     = useState([])
+  const [product, setProduct] = useState(null)
+  const [bids, setBids] = useState([])
+  const [myProducts, setMyProducts] = useState([])
   const [showTradeForm, setShowTradeForm] = useState(false)
-  const [offeredId, setOfferedId]       = useState('')
-  const [images, setImages]             = useState([])
-  const [currentImgIdx, setCurrent]     = useState(0)
-  const [prevId, setPrevId]             = useState(null)
-  const [nextId, setNextId]             = useState(null)
-  const [loading, setLoading]           = useState(true)
-  const [error, setError]               = useState('')
-  const [bidAmount, setBidAmount]       = useState('')
+  const [offeredId, setOfferedId] = useState('')
+  const [images, setImages] = useState([])
+  const [currentImgIdx, setCurrentImgIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [bidAmount, setBidAmount] = useState('')
 
-  // Prev/Next product
-  useEffect(() => {
-    api.get('/api/products/feed')
-      .then(res => {
-        const ids = res.data.map(p => p.id)
-        const idx = ids.indexOf(+id)
-        setPrevId(idx > 0 ? ids[idx - 1] : null)
-        setNextId(idx < ids.length - 1 ? ids[idx + 1] : null)
-      })
-      .catch(console.error)
-  }, [id])
-
-  // Load product
+  // Загрузка товара
   useEffect(() => {
     setLoading(true)
     api.get(`/api/products/${id}`)
       .then(res => {
         setProduct(res.data)
-        // support both imageUrl and imageUrls[]
         const imgs = res.data.imageUrls ?? (res.data.imageUrl ? [res.data.imageUrl] : [])
         setImages(imgs)
       })
@@ -60,7 +45,7 @@ export default function ProductDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
-  // Load bids if auction
+  // Загрузка ставок, если аукцион
   useEffect(() => {
     if (product?.isAuction) {
       api.get('/api/bids', { params: { productId: product.id } })
@@ -69,7 +54,7 @@ export default function ProductDetail() {
     }
   }, [product])
 
-  // Load my products when showing trade form
+  // Загрузка моих товаров для формы обмена
   useEffect(() => {
     if (showTradeForm && user) {
       api.get('/api/products/my-products')
@@ -78,31 +63,33 @@ export default function ProductDetail() {
     }
   }, [showTradeForm, user])
 
-  if (loading) return <Spinner animation="border" className="m-5" />
-  if (!product) return <Alert variant="warning">Toodet ei leitud.</Alert>
-
-  const now = new Date()
-  const endsAt = product.endsAt ? new Date(product.endsAt) : null
-  const auctionActive = product.isAuction && endsAt > now
-  const topBid = bids.length
-    ? Math.max(...bids.map(b => b.amount))
-    : product.minBid ?? 0
-
-  const prevImage = () =>
-    setCurrent(i => (i === 0 ? images.length - 1 : i - 1))
-  const nextImage = () =>
-    setCurrent(i => (i === images.length - 1 ? 0 : i + 1))
-
+  // Открыть или создать чат с продавцом по продукту
+  async function handleWrite() {
+    if (!product) return;
+  
+    try {
+      // 1) POST /api/Chats/product/{productId}
+      const { data } = await api.post(`/api/Chats/product/${product.id}`);
+      // 2) переходим в созданный (или существующий) чат
+      navigate(`/chats/${data.id}`);
+    } catch (err) {
+      console.error('Ошибка создания чата:', err.response?.status, err.response?.data || err.message);
+      alert('Не удалось создать чат');
+    }
+  }
   const handlePlaceBid = async () => {
     setError('')
     if (!user) {
-      setError('Logi sisse, et teha pakkumine.')
+      setError('Palun logi sisse, et teha pakkumine.')
       return
     }
     if (user.id === product.sellerId) {
       setError('Ei saa teha pakkumist enda tootega.')
       return
     }
+    const topBid = bids.length
+      ? Math.max(...bids.map(b => b.amount))
+      : (product.minBid ?? 0)
     const amt = parseFloat(bidAmount)
     if (isNaN(amt) || amt <= topBid) {
       setError(`Sisesta summa, mis on suurem kui €${topBid.toFixed(2)}.`)
@@ -113,14 +100,8 @@ export default function ProductDetail() {
       const res = await api.get('/api/bids', { params: { productId: product.id } })
       setBids(res.data)
       setBidAmount('')
-    } catch (err) {
-      console.error(err)
-      const data = err.response?.data
-      setError(
-        typeof data === 'string'
-          ? data
-          : data?.message || 'Pakkumine ebaõnnestus.'
-      )
+    } catch {
+      setError('Pakkumine ebaõnnestus.')
     }
   }
 
@@ -133,20 +114,19 @@ export default function ProductDetail() {
       await api.post(`/api/cart/add/${product.id}`)
       refreshCartCount()
       alert('Toode lisatud ostukorvi.')
-    } catch (err) {
-      console.error(err)
-      alert(err.response?.data || 'Ostukorvi lisamine ebaõnnestus.')
+    } catch {
+      alert('Ostukorvi lisamine ebaõnnestus.')
     }
   }
 
   const handleProposeTrade = async () => {
     setError('')
     if (!user) {
-      setError('Logi sisse, et proposeerida.')
+      setError('Palun logi sisse, et teha vahetuspakkumine.')
       return
     }
     if (user.id === product.sellerId) {
-      setError('Ei saa proposeerida enda tootega.')
+      setError('Ei saa teha vahetuspakkumist enda tootega.')
       return
     }
     if (product.status !== 'Available') {
@@ -165,24 +145,32 @@ export default function ProductDetail() {
       })
       alert('Vahetuspakkumine saadetud!')
       setShowTradeForm(false)
-    } catch (err) {
-      console.error(err)
-      const data = err.response?.data
-      setError(
-        typeof data === 'string'
-          ? data
-          : data?.message || 'Vahetuspakkumine ebaõnnestus.'
-      )
+    } catch {
+      setError('Vahetuspakkumine ebaõnnestus.')
     }
   }
+
+  if (loading) return <Spinner animation="border" className="m-5" />
+  if (!product) return <Alert variant="warning">Toodet ei leitud.</Alert>
+
+  const now = new Date()
+  const endsAt = product.endsAt ? new Date(product.endsAt) : null
+  const auctionActive = product.isAuction && endsAt > now
+  const topBid = bids.length
+    ? Math.max(...bids.map(b => b.amount))
+    : (product.minBid ?? 0)
+
+  const prevImage = () =>
+    setCurrentImgIdx(i => (i === 0 ? images.length - 1 : i - 1))
+  const nextImage = () =>
+    setCurrentImgIdx(i => (i === images.length - 1 ? 0 : i + 1))
 
   return (
     <Container className="my-5">
       <Row className="g-4">
-        {/* Image gallery */}
         <Col md={5} className="position-relative">
           {images.length > 0 ? (
-            <>
+            <>  
               <Zoom>
                 <img
                   src={images[currentImgIdx]}
@@ -213,7 +201,6 @@ export default function ProductDetail() {
           )}
         </Col>
 
-        {/* Details */}
         <Col md={7}>
           <h2>{product.name}</h2>
 
@@ -265,11 +252,13 @@ export default function ProductDetail() {
                 <Button
                   className="me-2"
                   onClick={handleAddToCart}
+                  disabled={!user}
                 >
                   Lisa ostukorvi
                 </Button>
                 <Button
                   variant="outline-secondary"
+                  className="me-2"
                   onClick={() => setShowTradeForm(s => !s)}
                   disabled={
                     !user ||
@@ -277,8 +266,16 @@ export default function ProductDetail() {
                     product.status !== 'Available'
                   }
                 >
-                  Propose Trade
+                  Paku vahetust
                 </Button>
+                {user && user.id !== product.sellerId && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleWrite}
+                  >
+                    Kirjuta müüjale
+                  </Button>
+                )}
               </div>
               {showTradeForm && (
                 <div className="mb-3" style={{ maxWidth: 300 }}>
