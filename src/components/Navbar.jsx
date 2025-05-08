@@ -1,4 +1,4 @@
-// src/pages/Navbar.jsx
+// src/components/Navbar.jsx
 import React, { useEffect, useState } from 'react'
 import { FaBars, FaBell, FaShoppingCart, FaUserCircle } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
@@ -8,47 +8,64 @@ import api from '../services/api'
 import '../styles/Navbar.css'
 
 export default function Navbar() {
-	const { user, logout } = useAuth()
-	const isAuthenticated = Boolean(user)
-	const isAdmin = user?.roles?.includes('Admin')
+  const { user, logout } = useAuth()
+  const isAuthenticated = Boolean(user)
+  const isAdmin = user?.roles?.includes('Admin')
 
-	const [menuOpen, setMenuOpen] = useState(false)
-	const [cartCount, setCartCount] = useState(0)
-	const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+  const navigate = useNavigate()
 
-	useEffect(() => {
-		if (isAuthenticated) {
-			api.get('/api/cart/count', { withCredentials: true })
-				.then(res => setCartCount(res.data.count))
-				.catch(() => setCartCount(0))
-		}
-	}, [isAuthenticated])
+  useEffect(() => {
+    if (isAuthenticated) {
+      api
+        .get('/api/cart/count', { withCredentials: true })
+        .then(res => setCartCount(res.data.count))
+        .catch(() => setCartCount(0))
+    }
+  }, [isAuthenticated])
 
-	const toggleMenu = () => setMenuOpen(o => !o)
+  const toggleMenu = () => setMenuOpen(o => !o)
 
-	const handleLogout = async () => {
-		await logout()
-		navigate('/login', { replace: true })
-	}
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
+  }
 
-	const handleAvatarClick = () => {
-		setMenuOpen(false)
-		navigate(isAuthenticated ? '/profile' : '/login')
-	}
+  const handleAvatarClick = () => {
+    setMenuOpen(false)
+    navigate(isAuthenticated ? '/profile' : '/login')
+  }
 
-	return (
-		<nav className='navbar navbar-expand-lg bg-body-tertiary'>
-			<div className='container-fluid'>
-				<button className='navbar-toggler' type='button' onClick={toggleMenu}>
-					<FaBars size={20} />
-				</button>
+  return (
+    <nav className="navbar navbar-expand-lg bg-body-tertiary">
+      <div className="container-fluid">
+        {/* Бургер-меню */}
+        <button className="navbar-toggler" type="button" onClick={toggleMenu}>
+          <FaBars size={20} />
+        </button>
 
-				<Link className='navbar-brand d-flex align-items-center' to='/'>
-					<img src={logo} height='30' alt='Logo' loading='lazy' />
-					<span className='ms-2'>Riidedstock</span>
-				</Link>
+        {/* Логотип */}
+        <Link className="navbar-brand d-flex align-items-center" to="/">
+          <img src={logo} height="30" alt="Logo" loading="lazy" />
+          <span className="ms-2">Riidedstock</span>
+        </Link>
 
-            {/* вот ссылка на мои товары */}
+        {/* Ссылки */}
+        <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            <li className="nav-item">
+              <Link className="nav-link" to="/" onClick={() => setMenuOpen(false)}>
+                Avaleht
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/sell" onClick={() => setMenuOpen(false)}>
+                Müü
+              </Link>
+            </li>
+
+            {/* Мои товары */}
             {isAuthenticated && (
               <li className="nav-item">
                 <Link
@@ -60,12 +77,15 @@ export default function Navbar() {
                 </Link>
               </li>
             )}
- <li className="nav-item">
-             <Link className="nav-link" to="/chats" onClick={()=>setMenuOpen(false)}>
-             Vestlused
+
+            {/* Новая страница «Vestlused» */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/chats" onClick={() => setMenuOpen(false)}>
+                Vestlused
               </Link>
-           </li>
-            {/* админ-меню */}
+            </li>
+
+            {/* Админ-меню */}
             {isAuthenticated && isAdmin && (
               <>
                 <li className="nav-item">
@@ -91,8 +111,8 @@ export default function Navbar() {
           </ul>
         </div>
 
-        {/* иконки справа */}
-        <div className="d-flex align-items-center">
+        {/* Иконки справа */}
+        <div className="d-flex align-items-center position-relative">
           {isAuthenticated && (
             <Link
               className="text-reset me-3 position-relative"
@@ -100,17 +120,25 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               <FaShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{ fontSize: '0.6rem' }}
+                >
+                  {cartCount}
+                </span>
+              )}
             </Link>
           )}
+
           <button className="btn btn-link text-reset p-0 me-3">
             <FaBell size={20} />
           </button>
-          <button
-            className="btn btn-link text-reset p-0"
-            onClick={handleAvatarClick}
-          >
+
+          <button className="btn btn-link text-reset p-0" onClick={handleAvatarClick}>
             <FaUserCircle size={28} />
           </button>
+
           {isAuthenticated && (
             <button className="btn btn-sm btn-outline-danger ms-2" onClick={handleLogout}>
               Logi välja
@@ -119,5 +147,5 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  );
+  )
 }
