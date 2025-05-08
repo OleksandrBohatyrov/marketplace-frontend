@@ -277,7 +277,7 @@ export default function ProductDetail() {
                     product.status !== 'Available'
                   }
                 >
-                  Propose Trade
+                  Pakkumine vahetada
                 </Button>
               </div>
               {showTradeForm && (
