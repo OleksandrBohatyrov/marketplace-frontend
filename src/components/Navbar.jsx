@@ -1,6 +1,5 @@
-// src/components/Navbar.jsx
 import React, { useEffect, useState } from 'react'
-import { FaBars, FaBell, FaShoppingCart, FaUserCircle } from 'react-icons/fa'
+import { FaBars, FaShoppingCart, FaUserCircle } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import logo from '../assets/hoodielogo.png'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,142 +9,124 @@ import '../styles/Navbar.css'
 export default function Navbar() {
   const { user, logout } = useAuth()
   const isAuthenticated = Boolean(user)
-  const isAdmin = user?.roles?.includes('Admin')
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const navigate = useNavigate()
 
+  const fetchCount = () => {
+    api.get('/api/cart/count', { withCredentials: true })
+      .then(res => setCartCount(res.data.count))
+      .catch(() => setCartCount(0))
+  }
+
   useEffect(() => {
-    if (isAuthenticated) {
-      api
-        .get('/api/cart/count', { withCredentials: true })
-        .then(res => setCartCount(res.data.count))
-        .catch(() => setCartCount(0))
+    if (isAuthenticated) fetchCount()
+
+    const handler = () => {
+      fetchCount()
+    }
+    window.addEventListener('cartChanged', handler)
+
+    return () => {
+      window.removeEventListener('cartChanged', handler)
     }
   }, [isAuthenticated])
 
-  const toggleMenu = () => setMenuOpen(o => !o)
+	const toggleMenu = () => setMenuOpen(o => !o)
 
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login', { replace: true })
-  }
+	const handleLogout = async () => {
+		await logout()
+		navigate('/login', { replace: true })
+	}
 
-  const handleAvatarClick = () => {
-    setMenuOpen(false)
-    navigate(isAuthenticated ? '/profile' : '/login')
-  }
+	const handleAvatarClick = () => {
+		setMenuOpen(false)
+		navigate(isAuthenticated ? '/profile' : '/login')
+	}
 
-  return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary">
-      <div className="container-fluid">
-        {/* Бургер-меню */}
-        <button className="navbar-toggler" type="button" onClick={toggleMenu}>
-          <FaBars size={20} />
-        </button>
+	return (
+		<nav className='navbar navbar-expand-lg bg-body-tertiary'>
+			<div className='container-fluid'>
+				{/* Burger-mnu */}
+				<button className='navbar-toggler' type='button' onClick={toggleMenu}>
+					<FaBars size={20} />
+				</button>
 
-        {/* Логотип */}
-        <Link className="navbar-brand d-flex align-items-center" to="/">
-          <img src={logo} height="30" alt="Logo" loading="lazy" />
-          <span className="ms-2">Riidedstock</span>
-        </Link>
+				{/* Logo */}
+				<Link className='navbar-brand d-flex align-items-center' to='/'>
+					<img src={logo} height='30' alt='Logo' loading='lazy' />
+					<span className='ms-2'>Riidedstock</span>
+				</Link>
 
-        {/* Ссылки */}
-        <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link className="nav-link" to="/" onClick={() => setMenuOpen(false)}>
-                Avaleht
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/sell" onClick={() => setMenuOpen(false)}>
-                Müü
-              </Link>
-            </li>
+				{/* Links */}
+				<div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`}>
+					<ul className='navbar-nav me-auto mb-2 mb-lg-0'>
+						<li className='nav-item'>
+							<Link className='nav-link' to='/' onClick={() => setMenuOpen(false)}>
+								Avaleht
+							</Link>
+						</li>
+						<li className='nav-item'>
+							<Link className='nav-link' to='/sell' onClick={() => setMenuOpen(false)}>
+								Müü
+							</Link>
+						</li>
 
-            {/* Мои товары */}
-            {isAuthenticated && (
-              <li className="nav-item">
-                <Link
-                  className="nav-link"
-                  to="/my-products"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Minu tooted
-                </Link>
-              </li>
-            )}
+						{/* my products */}
+						{isAuthenticated && (
+							<li className='nav-item'>
+								<Link className='nav-link' to='/my-products' onClick={() => setMenuOpen(false)}>
+									Minu tooted
+								</Link>
+							</li>
+						)}
 
-            {/* Новая страница «Vestlused» */}
-            <li className="nav-item">
-              <Link className="nav-link" to="/chats" onClick={() => setMenuOpen(false)}>
-                Vestlused
-              </Link>
-            </li>
+						<li className='nav-item'>
+							<Link className='nav-link' to='/chats' onClick={() => setMenuOpen(false)}>
+								Vestlused
+							</Link>
+						</li>
+						{isAuthenticated && isAdmin && (
+							<>
+								<li className='nav-item'>
+									<Link className='nav-link' to='/admin/categories' onClick={() => setMenuOpen(false)}>
+										Halda kategooriaid
+									</Link>
+								</li>
+								<li className='nav-item'>
+									<Link className='nav-link' to='/admin/products' onClick={() => setMenuOpen(false)}>
+										Halda tooteid
+									</Link>
+								</li>
+							</>
+						)}
+					</ul>
+				</div>
 
-            {/* Админ-меню */}
-            {isAuthenticated && isAdmin && (
-              <>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link"
-                    to="/admin/categories"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Halda kategooriaid
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link"
-                    to="/admin/products"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Halda tooteid
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
+				<div className='d-flex align-items-center position-relative'>
+					{isAuthenticated && (
+						<Link className='text-reset me-3 position-relative' to='/cart' onClick={() => setMenuOpen(false)}>
+							<FaShoppingCart size={20} />
+							{cartCount > 0 && (
+								<span className='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger' style={{ fontSize: '0.6rem' }}>
+									{cartCount}
+								</span>
+							)}
+						</Link>
+					)}
 
-        {/* Иконки справа */}
-        <div className="d-flex align-items-center position-relative">
-          {isAuthenticated && (
-            <Link
-              className="text-reset me-3 position-relative"
-              to="/cart"
-              onClick={() => setMenuOpen(false)}
-            >
-              <FaShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          )}
+					<button className='btn btn-link text-reset p-0' onClick={handleAvatarClick}>
+						<FaUserCircle size={28} />
+					</button>
 
-          <button className="btn btn-link text-reset p-0 me-3">
-            <FaBell size={20} />
-          </button>
-
-          <button className="btn btn-link text-reset p-0" onClick={handleAvatarClick}>
-            <FaUserCircle size={28} />
-          </button>
-
-          {isAuthenticated && (
-            <button className="btn btn-sm btn-outline-danger ms-2" onClick={handleLogout}>
-              Logi välja
-            </button>
-          )}
-        </div>
-      </div>
-    </nav>
-  )
+					{isAuthenticated && (
+						<button className='btn btn-sm btn-outline-danger ms-2' onClick={handleLogout}>
+							Logi välja
+						</button>
+					)}
+				</div>
+			</div>
+		</nav>
+	)
 }
