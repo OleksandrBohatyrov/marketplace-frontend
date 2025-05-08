@@ -100,12 +100,6 @@ export default function App() {
       >
         Me hindame teie privaatsust. Me kasutame küpsiseid, et parandada teie sirvimiskogemust, pakkuda
         isikupärastatud sisu ning analüüsida liiklust.{' '}
-        <a
-          href="/cookies"
-          style={{ color: '#4eaaf1', textDecoration: 'underline' }}
-        >
-          Loe rohkem küpsistest
-        </a>
       </CookieConsent>
 
       <Footer />
