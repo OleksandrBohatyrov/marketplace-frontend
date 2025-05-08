@@ -234,12 +234,14 @@ export default function Home() {
                     to={`/products/${p.id}`}
                     className="card h-100 product-card text-decoration-none text-dark"
                   >
-                    <img
-                      src={p.imageUrl || 'https://via.placeholder.com/400x300'}
-                      alt={p.name}
-                      className="card-img-top"
-                      style={{ objectFit: 'cover', height: '140px' }}
-                    />
+                     <img
+  src={
+     p.imageUrls && p.imageUrls.length > 0       ? p.imageUrls[0]
+       : 'https://via.placeholder.com/400x300'   }
+   alt={p.name}
+   className="card-img-top"
+   style={{ objectFit: 'cover', height: '140px' }}
+ />
                     <div className="card-body p-2 d-flex justify-content-between align-items-center">
                       <h6
                         className="card-title mb-0 text-truncate"

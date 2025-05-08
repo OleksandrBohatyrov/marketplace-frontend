@@ -1,8 +1,8 @@
-// src/pages/ProductDetail.jsx
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 import {
@@ -19,6 +19,7 @@ export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { refreshCartCount } = useCart()
 
   const [product, setProduct]           = useState(null)
   const [bids, setBids]                 = useState([])
@@ -120,6 +121,21 @@ export default function ProductDetail() {
           ? data
           : data?.message || 'Pakkumine ebaõnnestus.'
       )
+    }
+  }
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      alert('Palun logi sisse, et lisada ostukorvi.')
+      return
+    }
+    try {
+      await api.post(`/api/cart/add/${product.id}`)
+      refreshCartCount()
+      alert('Toode lisatud ostukorvi.')
+    } catch (err) {
+      console.error(err)
+      alert(err.response?.data || 'Ostukorvi lisamine ebaõnnestus.')
     }
   }
 
@@ -248,7 +264,7 @@ export default function ProductDetail() {
               <div className="d-flex mb-3">
                 <Button
                   className="me-2"
-                  onClick={() => window.alert('Lisa ostukorvi')}
+                  onClick={handleAddToCart}
                 >
                   Lisa ostukorvi
                 </Button>
