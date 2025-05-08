@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 
+// Компонент страницы Мои товары
 export default function MyProducts() {
   const [products, setProducts] = useState([])
   const [trades, setTrades]     = useState([])
@@ -25,9 +26,7 @@ export default function MyProducts() {
   const handleAccept = async trade => {
     try {
       await api.post(`/api/trades/${trade.id}/accept`)
-      // удаляем принятое предложение
       setTrades(ts => ts.filter(t => t.id !== trade.id))
-      // отмечаем, что целевой товар теперь продан
       setProducts(ps =>
         ps.map(p =>
           p.id === trade.target.id ? { ...p, status: 'Sold' } : p
@@ -73,9 +72,7 @@ export default function MyProducts() {
             <div className="card-body">
               <p className="mb-2">
                 <strong>{trade.proposer.userName}</strong> pakub selle vastu sinu toodet{' '}
-                <Link to={`/products/${trade.offered.id}`}>
-                  {trade.offered.name}
-                </Link>
+                <Link to={`/products/${trade.offered.id}`}>{trade.offered.name}</Link>
               </p>
               <button
                 className="btn btn-sm btn-success me-2"
@@ -106,20 +103,23 @@ export default function MyProducts() {
             <div key={p.id} className="col-md-6 mb-4">
               <div className="card h-100">
                 <img
-                  src={p.imageUrl || 'https://via.placeholder.com/400x300'}
+                  src={
+                    p.imageUrls && p.imageUrls.length > 0
+                      ? p.imageUrls[0]
+                      : 'https://via.placeholder.com/400x300'
+                  }
                   className="card-img-top"
                   alt={p.name}
                   style={{ height: '200px', objectFit: 'cover' }}
                 />
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{p.name}</h5>
-                  <p className="text-success mb-1">€{p.price}</p>
+                  <p className="text-success mb-1">€{p.price.toFixed(2)}</p>
                   <p className="mb-1">
                     <strong>Kategooria:</strong> {p.category.name}
                   </p>
                   <p className="mb-1">
-                    <strong>Lisatud:</strong>{' '}
-                    {new Date(p.createdAt).toLocaleDateString()}
+                    <strong>Lisatud:</strong> {new Date(p.createdAt).toLocaleDateString()}
                   </p>
                   <p className="mb-3">
                     <strong>Staatus:</strong>{' '}
