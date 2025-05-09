@@ -71,7 +71,6 @@ export default function MyProducts() {
 
   return (
     <div className="container my-5">
-      {/* SECTION: Exchange Proposals */}
       <h2 className="mb-4">Vahetuspakkumised</h2>
       {trades.length === 0 ? (
         <div className="alert alert-info">
@@ -102,7 +101,7 @@ export default function MyProducts() {
         ))
       )}
 
-      {/* SECTION: My Products */}
+      {/*  My Products */}
       <h2 className="mt-5 mb-4">Minu tooted</h2>
       {products.length === 0 ? (
         <div className="alert alert-info">

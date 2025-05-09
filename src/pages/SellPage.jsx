@@ -1,5 +1,3 @@
-// File: src/pages/SellPage.jsx
-
 import React, { useEffect, useState } from 'react'
 import { useForm, Controller }     from 'react-hook-form'
 import { useNavigate }             from 'react-router-dom'
@@ -41,8 +39,8 @@ export default function SellPage() {
       description: '',
       price: '',
       category: null,
-      tagNames: [],   // <-- free-form tag names
-      images: [],     // will hold compressed WebP files
+      tagNames: [],   
+      images: [],    
       isAuction: false,
       minBid: '',
       endsAt: null
@@ -51,7 +49,6 @@ export default function SellPage() {
 
   const isAuction = watch('isAuction')
 
-  // Fetch current user, categories, and existing tags for suggestions
   useEffect(() => {
     api.get('/api/users/me', { withCredentials: true })
        .catch(() => navigate('/login', { replace: true }))
@@ -59,12 +56,10 @@ export default function SellPage() {
        .then(r => setCategories(r.data))
     api.get('/api/tags')
        .then(r =>
-         // we only need tag **names** to suggest
          setTagsOptions(r.data.map(t => ({ label: t.name, value: t.name })))
        )
   }, [navigate])
 
-  // Dropzone + image compression
   const {
     getRootProps,
     getInputProps,
@@ -193,7 +188,7 @@ export default function SellPage() {
           )}
         </Form.Group>
 
-        {/* Tags (free-form) */}
+        {/* Tags */}
         <Form.Group className="mb-3">
           <Form.Label>Sildid (kirjuta või vali olemasolev, max 5)</Form.Label>
           <Controller
@@ -201,7 +196,6 @@ export default function SellPage() {
             control={control}
             rules={{ validate: v => v.length <= 5 }}
             render={({ field }) => {
-              // suggestions from existing tagsOptions
               const value = field.value.map(n => ({ label: n, value: n }))
               return (
                 <CreatableSelect

@@ -25,7 +25,6 @@ export default function ProductDetail() {
 	const [error, setError] = useState('')
 	const [bidAmount, setBidAmount] = useState('')
 
-	// Загрузка товара
 	useEffect(() => {
 		setLoading(true)
 		api.get(`/api/products/${id}`)
@@ -38,7 +37,6 @@ export default function ProductDetail() {
 			.finally(() => setLoading(false))
 	}, [id])
 
-	// Загрузка ставок, если аукцион
 	useEffect(() => {
 		if (product?.isAuction) {
 			api.get('/api/bids', { params: { productId: product.id } })
@@ -47,7 +45,6 @@ export default function ProductDetail() {
 		}
 	}, [product])
 
-	// Загрузка моих товаров для формы обмена
 	useEffect(() => {
 		if (showTradeForm && user) {
 			api.get('/api/products/my-products')
@@ -56,18 +53,15 @@ export default function ProductDetail() {
 		}
 	}, [showTradeForm, user])
 
-	// Открыть или создать чат с продавцом по продукту
 	async function handleWrite() {
 		if (!product) return
 
 		try {
-			// 1) POST /api/Chats/product/{productId}
 			const { data } = await api.post(`/api/Chats/product/${product.id}`)
-			// 2) переходим в созданный (или существующий) чат
 			navigate(`/chats/${data.id}`)
 		} catch (err) {
-			console.error('Ошибка создания чата:', err.response?.status, err.response?.data || err.message)
-			alert('Не удалось создать чат')
+			console.error('Vestluse loomise viga:', err.response?.status, err.response?.data || err.message)
+			alert('Ei õnnestunud luua jututuba')
 		}
 	}
 	const handlePlaceBid = async () => {

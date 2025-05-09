@@ -67,21 +67,17 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      // 1) удалить все товары пользователя
       const productsRes = await api.get('/api/products/my-products');
       for (const p of productsRes.data) {
         await api.delete(`/api/products/${p.id}`);
       }
-      // 2) удалить аккаунт
       await api.delete('/api/users/me');
       window.location.reload()
-      // 3) разлогиниться
       await logout();
-      // 4) перенаправить на главную
       navigate('/home', { replace: true });
     } catch (e) {
-      console.error('Ошибка при удалении:', e.response?.data || e.message || e);
-      alert('К сожалению, произошла ошибка при удалении аккаунта');
+      console.error('Kustutamisviga:', e.response?.data || e.message || e);
+      alert('Vabandust, konto kustutamisel oli viga.');
     } finally {
       setLoading(false);
     }

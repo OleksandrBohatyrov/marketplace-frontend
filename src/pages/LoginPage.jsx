@@ -41,7 +41,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Sisselogimisvorm */}
         <div className="col-md-7 col-lg-5 col-xl-4 offset-xl-1">
           <div className="card shadow">
             <div className="card-body p-4">
@@ -66,7 +65,7 @@ export default function LoginPage() {
                   <label htmlFor="floatingEmail">E-posti aadress</label>
                 </div>
 
-                {/* Parool */}
+                {/* Password */}
                 <div className="form-floating mb-3">
                   <input
                     type="password"
@@ -80,7 +79,6 @@ export default function LoginPage() {
                   <label htmlFor="floatingPassword">Parool</label>
                 </div>
 
-                {/* Mäleta + Unustatud */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <div className="form-check">
                     <input
@@ -101,7 +99,6 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                {/* Saatmise nupp */}
                 <button
                   type="submit"
                   className="btn btn-primary w-100 mb-3"
@@ -109,14 +106,12 @@ export default function LoginPage() {
                   Logi sisse
                 </button>
 
-                {/* Eristaja */}
                 <div className="d-flex align-items-center my-4">
                   <hr className="flex-grow-1" />
                   <span className="mx-2 text-muted fw-bold">VÕI</span>
                   <hr className="flex-grow-1" />
                 </div>
 
-                {/* All link */}
                 <p className="text-center mt-3 mb-0 small">
                   Pole veel kontot?{' '}
                   <Link to="/register" className="link-primary">

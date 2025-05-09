@@ -13,7 +13,6 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
 
-  // Laeb vestluse info (teise kasutaja nime jaoks)
   useEffect(() => {
     api.get('/api/chats')
       .then(res => {
@@ -23,7 +22,6 @@ export default function Chat() {
       .catch(console.error)
   }, [chatId])
 
-  // Laeb sõnumid ja uuendab iga 3 sekundi järel
   useEffect(() => {
     loadMessages()
     const interval = setInterval(loadMessages, 3000)
@@ -39,12 +37,10 @@ export default function Chat() {
       .catch(console.error)
   }
 
-  // Kerib sõnumivaatese allossa
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // Sõnumi saatmine
   const handleSend = async () => {
     const text = input.trim()
     if (!text) return

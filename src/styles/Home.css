@@ -24,7 +24,6 @@
     font-size: 1rem;
   }
   
-  /* Блок категорий */
   .categories-filter {
     display: flex;
     flex-direction: column;
@@ -41,7 +40,6 @@
     margin-right: 0.5rem;
   }
   
-  /* Список товаров */
   .product-list {
     list-style: none;
     padding: 0;

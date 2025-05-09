@@ -18,7 +18,6 @@ export default function Cart() {
 	const stripe = useStripe()
 	const elements = useElements()
 
-	// Ostukorvi laadimine
 	const loadCart = async () => {
 		try {
 			const res = await api.get('/api/cart')
@@ -32,7 +31,6 @@ export default function Cart() {
 		loadCart()
 	}, [])
 
-	// clientSecret makse jaoks
 	useEffect(() => {
 		if (cart.length === 0) {
 			setClientSecret('')
@@ -49,7 +47,6 @@ export default function Cart() {
 			.catch(console.error)
 	}, [cart])
 
-	// Eemalda üks toode ostukorvist
 	const handleRemove = async cartItemId => {
 		if (!window.confirm('Kas olete kindel, et soovite selle toote ostukorvist eemaldada?')) {
 			return
@@ -64,7 +61,6 @@ export default function Cart() {
 		}
 	}
 
-	// Makse
 	const handleCheckout = async () => {
 		if (!user) {
 			navigate('/login')

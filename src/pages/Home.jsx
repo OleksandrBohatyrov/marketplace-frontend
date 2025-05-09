@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -24,7 +23,6 @@ export default function Home() {
       api.get('/api/tags'),
     ])
       .then(([prdRes, catRes, tagRes]) => {
-        // добавляем categoryId для фильтрации
         const normalized = prdRes.data.map(p => ({
           ...p,
           categoryId: p.category.id,
@@ -36,7 +34,6 @@ export default function Home() {
         setCategories(catRes.data)
         setTags(tagRes.data)
 
-        // вычисляем границы для фильтра по цене (учитываем аукционы)
         const allPrices = normalized.map(p =>
           p.isAuction
             ? (p.currentBid ?? p.minBid ?? 0)
@@ -52,7 +49,6 @@ export default function Home() {
 
   const now = new Date()
 
-  // функция для получения актуальной цены (для обычных и аукционных товаров)
   const getPrice = p =>
     p.isAuction
       ? (p.currentBid ?? p.minBid ?? 0)
@@ -76,7 +72,6 @@ export default function Home() {
     sorted.sort((a, b) => getPrice(b) - getPrice(a))
   }
 
-  // переключение категории
   const toggleCat = id => {
     setSelectedCats(prev => {
       const s = new Set(prev)
@@ -84,7 +79,6 @@ export default function Home() {
       return s
     })
   }
-  // переключение тега
   const toggleTag = id => {
     setSelectedTags(prev => {
       const s = new Set(prev)
@@ -92,12 +86,10 @@ export default function Home() {
       return s
     })
   }
-  // изменение минимальной цены
   const onMinChange = e => {
     const v = +e.target.value
     setSelPrice([Math.min(v, selPrice[1]), selPrice[1]])
   }
-  // изменение максимальной цены
   const onMaxChange = e => {
     const v = +e.target.value
     setSelPrice([selPrice[0], Math.max(v, selPrice[0])])
@@ -130,9 +122,7 @@ export default function Home() {
       </div>
 
       <div className="row">
-        {/* Sidebar filters */}
         <aside className="col-lg-3 mb-4">
-          {/* Price filter */}
           <div className="card mb-3">
             <div className="card-header">
               <h5 className="mb-0">Hind</h5>
@@ -216,7 +206,6 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* Product grid */}
         <div className="col-lg-9">
           {sorted.length === 0 ? (
             <div className="alert alert-warning">

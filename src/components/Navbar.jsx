@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React, { useState } from 'react'
 import { FaBars, FaShoppingCart, FaUserCircle } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'

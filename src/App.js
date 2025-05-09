@@ -69,7 +69,7 @@ export default function App() {
         </Routes>
       </main>
 
-      {/* Cookie nõusoleku banner */}
+      {/* Cookie banner */}
       <CookieConsent
         location="bottom"
         buttonText="Nõustun kõigega"
